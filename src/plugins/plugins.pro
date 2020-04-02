@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUBDIRS = platforms
+SUBDIRS = platforms platforminputcontexts
