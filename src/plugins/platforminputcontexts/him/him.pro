@@ -1,6 +1,8 @@
+CONFIG += link_pkgconfig
 TARGET = himplatforminputcontextplugin
 
-QT += core-private gui-private core
+QT += core-private gui-private core x11extras widgets
+
 
 SOURCES += qhildonplatforminputcontextmain.cpp \
            qhildonplatforminputcontext.cpp \
@@ -26,6 +28,8 @@ QMAKE_USE += xcb_xlib
     qtConfig(xcb-render): QMAKE_USE += xcb_render
     QMAKE_USE += xcb_syslibs
 }
+
+PKGCONFIG += hildon-input-method-framework-3.0 gtk+-2.0
 
 QMAKE_LFLAGS = $(QMAKE_LFLAGS) -lQt5XcbQpa
 QMAKE_CXXFLAGS = $(QMAKE_CXXFLAGS) -Ixcb
