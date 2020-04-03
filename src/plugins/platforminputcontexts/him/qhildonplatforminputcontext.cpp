@@ -23,6 +23,8 @@ QHildonInputContext::QHildonInputContext()
 }
 
 QHildonInputContext::~QHildonInputContext() {
+    // XXX: uninstall event filter
+    //delete eventFilter;
 }
 
 bool QHildonInputContext::filterEvent(const QEvent *event)
@@ -39,6 +41,10 @@ bool QHildonInputContext::isValid() const
 void QHildonInputContext::setFocusObject(QObject *object)
 {
     Q_UNUSED(object);
+
+    std::cerr << "setFocusObject" << std::endl;
+
+	eventFilter->setFocusObject(object); // XXX: we should probably just do it here
 }
 
 void QHildonInputContext::reset()
