@@ -1,6 +1,8 @@
 #include "qhildonplatforminputcontext.h"
 
 #include <QtCore/QCoreApplication>
+#include <QGuiApplication>
+
 #include <QtGui/QKeyEvent>
 #include <QtCore/QDebug>
 
@@ -9,6 +11,15 @@
 QHildonInputContext::QHildonInputContext()
 {
     std::cerr << "QHildonInputContext init!" << std::endl;
+    eventFilter = new MyXcbEventFilter();
+    QGuiApplication *currentApp = qGuiApp;
+
+    if (currentApp) {
+        currentApp->installNativeEventFilter((QAbstractNativeEventFilter*)eventFilter);
+    } else {
+        std::cerr << "No application!" << std::endl;
+    }
+
 }
 
 QHildonInputContext::~QHildonInputContext() {

@@ -3,11 +3,14 @@
 
 #include <qpa/qplatforminputcontext.h>
 
+#include "qhildonplatforminputeventfilter.h"
+
 #include <QtCore/QList>
 
 QT_BEGIN_NAMESPACE
 
 class QEvent;
+
 
 class QHildonInputContext : public QPlatformInputContext
 {
@@ -26,6 +29,7 @@ public:
 protected:
 
 private:
+    MyXcbEventFilter *eventFilter;
 };
 
 QT_END_NAMESPACE
