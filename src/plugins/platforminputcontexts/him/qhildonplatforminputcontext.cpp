@@ -29,6 +29,7 @@ QHildonInputContext::~QHildonInputContext() {
 
 bool QHildonInputContext::filterEvent(const QEvent *event)
 {
+    std::cerr << "QHildonInputContext::filterEvent" << std::endl;
     Q_UNUSED(event);
     return false;
 }

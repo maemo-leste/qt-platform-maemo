@@ -47,6 +47,8 @@ public:
 
 private:
     void sendHildonCommand(HildonIMCommand cmd, QWidget *widget);
+    void sendInputMode();
+    bool x11FilterEvent(xcb_client_message_event_t *event);
     xcb_window_t findHildonIm(void);
     xcb_atom_t m_allAtoms[QXcbHIMAtom::NAtoms]; // XXX: m_allAtoms name is from Xcb platform
     xcb_connection_t* getXcbConnection(void);
