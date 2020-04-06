@@ -1635,9 +1635,9 @@ void QXcbWindow::requestActivateWindow()
         xcb_send_event(xcb_connection(), 0, xcbScreen()->root(),
                        XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
                        (const char *)&event);
-    } else {
-        xcb_set_input_focus(xcb_connection(), XCB_INPUT_FOCUS_PARENT, m_window, connection()->time());
     }
+
+    xcb_set_input_focus(xcb_connection(), XCB_INPUT_FOCUS_PARENT, m_window, connection()->time());
 
     connection()->sync();
 }
