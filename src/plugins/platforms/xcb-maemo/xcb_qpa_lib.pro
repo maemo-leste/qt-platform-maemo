@@ -1,4 +1,4 @@
-TARGET     = QtXcbQpa
+TARGET     = QtXcbMaemoQpa
 CONFIG += no_module_headers internal_module
 DEFINES += QT_NO_FOREACH
 

@@ -42,17 +42,17 @@
 
 QT_BEGIN_NAMESPACE
 
-class QXcbIntegrationPlugin : public QPlatformIntegrationPlugin
+class QXcbMaemoIntegrationPlugin : public QPlatformIntegrationPlugin
 {
    Q_OBJECT
-   Q_PLUGIN_METADATA(IID QPlatformIntegrationFactoryInterface_iid FILE "xcb.json")
+   Q_PLUGIN_METADATA(IID QPlatformIntegrationFactoryInterface_iid FILE "maemo.json")
 public:
     QPlatformIntegration *create(const QString&, const QStringList&, int &, char **) override;
 };
 
-QPlatformIntegration* QXcbIntegrationPlugin::create(const QString& system, const QStringList& parameters, int &argc, char **argv)
+QPlatformIntegration* QXcbMaemoIntegrationPlugin::create(const QString& system, const QStringList& parameters, int &argc, char **argv)
 {
-    if (!system.compare(QLatin1String("xcb"), Qt::CaseInsensitive))
+    if (!system.compare(QLatin1String("maemo"), Qt::CaseInsensitive))
         return new QXcbIntegration(parameters, argc, argv);
 
     return 0;
@@ -60,4 +60,4 @@ QPlatformIntegration* QXcbIntegrationPlugin::create(const QString& system, const
 
 QT_END_NAMESPACE
 
-#include "qxcbmain.moc"
+#include "qxcbmaemomain.moc"
