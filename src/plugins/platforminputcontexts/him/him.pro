@@ -31,5 +31,5 @@ QMAKE_USE += xcb_xlib
 
 PKGCONFIG += hildon-input-method-framework-3.0 gtk+-2.0
 
-QMAKE_LFLAGS = $(QMAKE_LFLAGS) -lQt5XcbQpa
+QMAKE_LFLAGS = $(QMAKE_LFLAGS) -L$$OUT_PWD/../../../../lib/ -lQt5XcbMaemoQpa
 QMAKE_CXXFLAGS = $(QMAKE_CXXFLAGS) -Ixcb
