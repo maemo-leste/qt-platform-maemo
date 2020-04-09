@@ -1,0 +1,28 @@
+Source: qt-platform-maemo
+Section: libs
+Priority: optional
+Maintainer: Merlijn Wajer <merlijn@wizzup.org>
+Uploaders: Merlijn Wajer <merlijn@wizzup.org>
+Build-Depends: debhelper (>= 9),
+               libx11-dev,
+               pkg-kde-tools,
+               qtbase5-private-dev,
+               hildon-fm-dev,
+               libqt5x11extras5-dev,
+               hildon-input-method-framework-dev,
+Standards-Version: 3.9.8
+Homepage: https://maemo-leste.github.io
+Vcs-Git: https://github.com/maemo-leste/qt-platform-maemo
+Vcs-Browser: https://github.com/maemo-leste/qt-platform-maemo
+
+Package: qt-platform-maemo
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Qt 5 Maemo platform plugins
+ Contains two modules, the Maemo platform module, based on Qt5's Xcb platform
+ module, and the input platform module, adding support for hildon-input-method.
+ .
+ Export QT_QPA_PLATFORM=maemo and QT_IM_MODULE=him to enable it for all Qt5
+ applications.
