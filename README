@@ -1,0 +1,16 @@
+Qt5 Maemo platform and platforminputcontext plugins
+===================================================
+
+To use the modules, install the package, and set the following environment
+variables:
+
+* `QT_QPA_PLATFORM=maemo`, for platform and window manager functionality
+  (stacked windows, dialogs as overlay, keyboard input)
+* `QT_IM_MODULE=him` for hildon input method support (sticky modifier keys,
+  virtual keyboard)
+
+TODO
+====
+
+
+
