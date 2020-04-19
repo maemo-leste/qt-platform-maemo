@@ -26,6 +26,4 @@ QHildonInputContext *QHildonPlatformInputContextPlugin::create(const QString &sy
 
 QT_END_NAMESPACE
 
-// XXX: no moc?
 #include "qhildonplatforminputcontextmain.moc"
-//#include "qhildonplatforminputcontextmain.moc"

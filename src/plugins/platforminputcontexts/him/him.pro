@@ -6,10 +6,12 @@ QT += core-private gui-private core x11extras widgets
 
 SOURCES += qhildonplatforminputcontextmain.cpp \
            qhildonplatforminputcontext.cpp \
-           qhildonplatforminputeventfilter.cpp
+           qhildonplatforminputeventfilter.cpp \
+           qhildonplatforminputproxywidget.cpp
 
 HEADERS += qhildonplatforminputcontext.h \
            qhildonplatforminputeventfilter.h \
+           qhildonplatforminputproxywidget.h
 
 
 OTHER_FILES += him.json
