@@ -59,6 +59,9 @@
 #include "qxcbnativeinterface.h"
 #include "qxcbsystemtraytracker.h"
 
+#include "qmenu_maemo.h"
+#include <QtWidgets/qapplication.h>
+
 #include <qpa/qplatformintegration.h>
 #include <qpa/qplatformcursor.h>
 
@@ -1947,6 +1950,47 @@ void QXcbWindow::handleExposeEvent(const xcb_expose_event_t *event)
     }
 }
 
+void maemo5ShowApplicationMenu()
+{
+    // We need to keep the app menu pointer alive, since a widget action
+    // could have triggered a modal dialog.
+    // This is a last minute fix for PR1.2
+    // In the long run, we really want to cache the app menus (and not
+    // re-create them on each invocation).  In order to do this,
+    // QMaemo5ApplicationMenu needs to handle action add/remove/change
+    // events, which it doesn't do right now.
+    static QList<QPointer<QMaemo5ApplicationMenu> > cache;
+
+
+    //if (QWidget *w = qApp->activeWindow()) {
+    QApplication *app = reinterpret_cast<QApplication *>(qApp);
+
+    QWidget *w = app->activeWindow();
+    if (w) {
+        if (QMenuBar *menubar = w->findChild<QMenuBar *>()) {
+            QMutableListIterator<QPointer<QMaemo5ApplicationMenu> > it(cache);
+            while (it.hasNext()) {
+                QPointer<QMaemo5ApplicationMenu> val = it.next();
+                if (val.isNull()) { // cleanup
+                    it.remove();
+                } else if (val->parentWidget() == menubar->window()) {
+                    it.remove();
+                    delete val.data();
+                }
+            }
+            QPointer<QMaemo5ApplicationMenu> appmenu = new QMaemo5ApplicationMenu(menubar);
+            cache.append(appmenu);
+
+            if (!appmenu->isEmpty()) {
+                appmenu->exec();
+                if (appmenu && appmenu->selectedAction())
+                    appmenu->selectedAction()->trigger();
+            }
+        }
+    }
+}
+
+
 void QXcbWindow::handleClientMessageEvent(const xcb_client_message_event_t *event)
 {
     if (event->format != 32)
@@ -2012,6 +2056,17 @@ void QXcbWindow::handleClientMessageEvent(const xcb_client_message_event_t *even
             || event->type == atom(QXcbAtom::_COMPIZ_TOOLKIT_ACTION)
             || event->type == atom(QXcbAtom::_GTK_LOAD_ICONTHEMES)) {
         //silence the _COMPIZ and _GTK messages for now
+    } else if (event->type == atom(QXcbAtom::_MB_GRAB_TRANSFER)) {
+        qCWarning(lcQpaXcb) << "Got maemo grab transfer message: " << connection()->atomName(event->type);
+
+// XXX
+#if 0
+        if (passive_only || !QApplicationPrivate::active_window)
+            return 0;
+#endif
+
+        maemo5ShowApplicationMenu();
+
     } else {
         qCWarning(lcQpaXcb) << "Unhandled client message: " << connection()->atomName(event->type);
     }
