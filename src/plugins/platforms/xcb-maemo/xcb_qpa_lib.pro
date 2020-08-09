@@ -6,7 +6,8 @@ QT += \
     core-private gui-private \
     service_support-private theme_support-private \
     eventdispatcher_support-private fontdatabase_support-private \
-    edid_support-private
+    edid_support-private \
+    widgets widgets-private
 
 qtHaveModule(linuxaccessibility_support-private): \
     QT += linuxaccessibility_support-private
@@ -27,7 +28,8 @@ SOURCES = \
         qxcbcursor.cpp \
         qxcbimage.cpp \
         qxcbxsettings.cpp \
-        qxcbsystemtraytracker.cpp
+        qxcbsystemtraytracker.cpp \
+        qmenu_maemo.cpp
 
 HEADERS = \
         qxcbclipboard.h \
@@ -45,7 +47,8 @@ HEADERS = \
         qxcbimage.h \
         qxcbxsettings.h \
         qxcbsystemtraytracker.h \
-        qxcbxkbcommon.h
+        qxcbxkbcommon.h \
+        qmenu_maemo.h
 
 qtConfig(draganddrop) {
     SOURCES += qxcbdrag.cpp

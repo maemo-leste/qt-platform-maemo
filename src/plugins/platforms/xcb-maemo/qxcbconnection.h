@@ -303,6 +303,10 @@ namespace QXcbAtom {
         _COMPIZ_TOOLKIT_ACTION,
         _GTK_LOAD_ICONTHEMES,
 
+        // Maemo specific atoms
+        _MB_GRAB_TRANSFER,
+        _HILDON_WM_WINDOW_TYPE_APP_MENU,
+
         NPredefinedAtoms,
 
         _QT_SETTINGS_TIMESTAMP = NPredefinedAtoms,

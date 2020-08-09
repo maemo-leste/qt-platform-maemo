@@ -2021,6 +2021,11 @@ static const char * xcb_atomnames = {
     "_COMPIZ_DECOR_DELETE_PIXMAP\0"
     "_COMPIZ_TOOLKIT_ACTION\0"
     "_GTK_LOAD_ICONTHEMES\0"
+
+    // Maemo specific atoms
+    "_MB_GRAB_TRANSFER\0"
+    "_HILDON_WM_WINDOW_TYPE_APP_MENU\0"
+
     // \0\0 terminates loop.
 };
 
