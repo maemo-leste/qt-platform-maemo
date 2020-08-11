@@ -1,0 +1,541 @@
+(TODO: Also grep for DE_MAEMO5)
+
+Manually found, non Q_WS_MAEMO_5 greps:
+
+./src/corelib/global/qnamespace.h:
+
+- Extended with WA_Maemo5*Orientation attributes
+- Extended with WA_Maemo5StackedWindow
+- Extended with WA_Maemo5ShowProgressIndicator
+- Extended with WA_Maemo5NonComposited
+
+
+
+$ grep -r Q_WS_MAEMO_5  .
+./configure:                #QCONFIG_FLAGS="$QCONFIG_FLAGS QT_NO_XIM Q_WS_MAEMO_5 Q_OS_FREMANTLE QT_NO_SIZEGRIP QT_NO_PRINTDIALOG QT_NO_PRINTER QT_NO_SYSTEMTRAYICON"
+./configure:    QCONFIG_FLAGS="$QCONFIG_FLAGS QT_NO_XIM Q_WS_MAEMO_5"
+
+
+KERNEL
+
+[ ] ./src/gui/kernel/qt_x11_p.h
+
+Extra atoms:
+
+- for Hildon Desktop
+- for Hildon input Method
+
+[ ] ./src/gui/kernel/qwidget_x11.cpp
+
+Changes:
+
+- QtDbus for mce mode names
+- 'Old rotation' code
+- 'New' rotation code
+- Stacked Window check
+- Non Composited check
+- isTransient check (stacked window mod)
+- popup mode in create_sys, only add bypass window manager if some popmenu atom
+is not set
+- in QWidgetPrivate::setParent_sys, if wasCreated, check if it needs to be
+  stacked
+- modification to activateWindow() for keyboard focus (DONE)
+- setWindowState -> checkNonComposited check
+- show_sys -> some quirck/fix for maemo5 wm and hidden top level
+- setNetWmWindowTypes -> type splash window 2x
+- setNetWmWindowTypes -> for 'old' rotation
+- setNetWmWindowTypes -> for non composited and stacked window
+- setNetWmWindowTypes -> for force resizing windows windows if there are too
+  many window types (?)
+- maemo5ShowProgressIndicator call
+
+[ ] ./src/gui/kernel/qwidget.cpp
+
+- Code to set orientation attributes
+- Code for old rotation manager
+- More code to set orientation attributes
+
+
+[ ] ./src/gui/kernel/qguiplatformplugin.cpp
+
+- Check for Maemo5 desktopEnvironment, to return system icon theme name
+
+
+[ ] ./src/gui/kernel/qapplication_x11.cpp
+
+- Extra WM atoms (hildon-desktop and HIM)
+- Extra class to handle 'long tap events' (converted into right clicks)
+- Hack to undo cursor flash
+- Set default input method to 'hildon' (XXX: maybe we should rename our input
+method 'him' to 'hildon')
+- (Another mod to make hildon default IM)
+- Force set DE to DE_MAEMO5
+- Modification to never show icons in Menus
+- Hack for focus of non-modal windows
+- Hack to deal with _MB_GRAB_TRANSFER messages to show application menu (I think
+we can just filter these early, but it seems to invoke some private method of
+QApplicationPrivate to show the app menu - argh)
+- Hack to deal with HIM events (I think we can just filter these early)
+- Hack in x11ProcessEvent to make all XKeyPress and XKeyRelease events
+spontaneous (?)
+- Hack to show application menu when "F4" KeyPress is sent
+
+
+[ ] ./src/gui/kernel/qkeymapper_p.h
+
+- Addition of maemo5TranslateKeySym
+
+
+./src/gui/kernel/qapplication.cpp
+[ ]
+
+- Changes default drag distance to '12'
+- Warning in QApplicationPrivate::construct that applications in Maemo must have
+AF_DEFINES_SOURCED set in environment
+- Mod for DE_MAEMO5
+
+
+[ ] ./src/gui/kernel/qdesktopwidget_x11.cpp
+
+- Hack for _NET_WORKAREA being broken in Maemo5
+
+./src/gui/kernel/qkeymapper_x11.cpp
+
+- Various KeySym definitions
+- Hack to do maemo5 specific conversion in translateKeySym (probably to have it
+work without modifiers?)
+
+
+[ ] ./src/gui/kernel/qwidget_p.h
+
+Changes:
+
+- definition of maemo5ShowProgressIndicator
+- definition for old portrait manager
+
+
+[ ] ./src/gui/kernel/qapplication_p.h
+
+- Definition of maemo5ShowApplicationMenu
+
+
+WIDGETS
+
+./src/gui/widgets/qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox.cpp:#ifndef Q_WS_MAEMO_5 // prevent popup from closing much too fast with touchscreen
+./src/gui/widgets/qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox.cpp:#endif // Q_WS_MAEMO_5
+./src/gui/widgets/qmainwindow.cpp:#if defined(Q_WS_MAEMO_5)
+./src/gui/widgets/qmenu_maemo5_p.h:#if defined(Q_WS_MAEMO_5)
+./src/gui/widgets/qsizegrip.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qmenubar_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qmenu_maemo5.cpp:#if defined(Q_WS_MAEMO_5)
+./src/gui/widgets/qmenu_maemo5.cpp:#endif //Q_WS_MAEMO_5
+./src/gui/widgets/qtextedit.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qtextedit.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qtextedit.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qplaintextedit.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qplaintextedit.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qcombobox_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qtextbrowser.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qtextbrowser.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qlineedit.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qlineedit.cpp:#endif // !Q_WS_MAEMO_5
+./src/gui/widgets/qmenubar.cpp:#if defined(Q_WS_MAEMO_5)
+./src/gui/widgets/qmenubar.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qdialogbuttonbox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qdialogbuttonbox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qdialogbuttonbox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qdialogbuttonbox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qdialogbuttonbox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qdialogbuttonbox.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qfontcombobox.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/widgets/qfontcombobox.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/widgets/qabstractscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qabstractscrollarea.cpp:#endif // Q_WS_MAEMO_5
+./src/gui/widgets/qabstractscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qabstractscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qabstractscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/widgets/qabstractscrollarea.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/util/qdesktopservices_x11.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/util/qdesktopservices_x11.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/util/qdesktopservices_x11.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/util/qdesktopservices_x11.cpp:#ifdef Q_WS_MAEMO_5
+
+
+STYLES
+
+
+./src/gui/styles/qgtkpainter.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/styles/qgtkpainter.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/styles/qmaemo5style_p.h:#if defined(Q_WS_MAEMO_5)
+./src/gui/styles/qmaemo5style_p.h:#endif //defined(Q_WS_MAEMO_5)
+./src/gui/styles/qmaemo5style.h:#if defined(Q_WS_MAEMO_5)
+./src/gui/styles/qmaemo5style.h:#endif //defined(Q_WS_MAEMO_5)
+./src/gui/styles/qmaemo5style.cpp:#if defined(Q_WS_MAEMO_5)
+./src/gui/styles/qgtkstyle.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/styles/qgtkstyle.cpp:#ifdef Q_WS_MAEMO_5
+
+DIALOGS
+
+
+./src/gui/dialogs/qinputdialog.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/dialogs/qmessagebox.cpp:#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qmessagebox.cpp:#  if defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qmessagebox.cpp:#if defined(Q_WS_QWS) || defined(Q_WS_WINCE) || defined(Q_WS_S60) || defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qmessagebox.cpp:#elif defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qmessagebox.cpp:#if !defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qmessagebox.cpp:#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qmessagebox.cpp:#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qwizard.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/dialogs/qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/dialogs/qcolordialog.cpp:#if defined(Q_WS_S60) || defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qcolordialog.cpp:#if defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qcolordialog.cpp:#  elif defined Q_WS_MAEMO_5
+./src/gui/dialogs/qcolordialog.cpp:#  elif defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qprogressdialog.cpp:#if defined(Q_WS_S60) || defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qprogressdialog.cpp:#ifndef Q_WS_MAEMO_5
+./src/gui/dialogs/qprogressdialog.cpp:#else // Q_WS_MAEMO_5
+./src/gui/dialogs/qprogressdialog.cpp:#endif // Q_WS_MAEMO_5
+./src/gui/dialogs/qprogressdialog.cpp:#elif defined(Q_WS_MAEMO_5)
+./src/gui/dialogs/qprogressdialog.cpp:#ifdef Q_WS_MAEMO_5
+
+
+INPUT
+
+./src/gui/inputmethod/qinputcontextfactory.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/inputmethod/qinputcontextfactory.cpp:#if defined(Q_WS_MAEMO_5)
+./src/gui/inputmethod/qinputcontextfactory.cpp:#if defined (Q_WS_MAEMO_5)
+./src/gui/inputmethod/qinputcontextfactory.cpp:#if defined (Q_WS_MAEMO_5)
+./src/gui/inputmethod/qinputcontextfactory.cpp:#if defined(Q_WS_MAEMO_5)
+./src/gui/inputmethod/qhildoninputmethodprotocol_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/inputmethod/qhildoninputcontext_x11.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/inputmethod/qhildoninputcontext_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/inputmethod/qhildoninputcontext_p.h:#endif // Q_WS_MAEMO_5
+
+
+MISC / WIDGETS?
+
+./src/gui/itemviews/qstyleditemdelegate.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/itemviews/qitemdelegate.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/itemviews/qabstractitemview.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/itemviews/qabstractitemview.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/itemviews/qcolumnview.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/itemviews/qcolumnview_p.h:#ifdef Q_WS_MAEMO_5
+./src/gui/text/qtextcontrol.cpp:#ifdef Q_WS_MAEMO_5
+./src/gui/text/qtextcontrol.cpp:#endif // !Q_WS_MAEMO_5
+./src/corelib/tools/qlocale.cpp:#ifdef Q_WS_MAEMO_5
+./src/corelib/global/qglobal.cpp:  \macro Q_WS_MAEMO_5
+./src/maemo5/qmaemo5editbar.h:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5editbar.h:#endif // Q_WS_MAEMO_5
+./src/maemo5/qmaemo5informationbox.cpp:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5informationbox.cpp:#endif // Q_WS_MAEMO_5
+./src/maemo5/qmaemo5abstractpickselector.h:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5abstractpickselector.h:#endif // Q_WS_MAEMO_5
+./src/maemo5/qmaemo5valuebutton.h:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5valuebutton.h:#endif // Q_WS_MAEMO_5
+./src/maemo5/qmaemo5datepickselector.h:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5datepickselector.h:#endif // Q_WS_MAEMO_5
+./src/maemo5/qmaemo5informationbox.h:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5informationbox.h:#endif // Q_WS_MAEMO_5
+./src/maemo5/qmaemo5timepickselector.h:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5timepickselector.h:#endif // Q_WS_MAEMO_5
+./src/maemo5/qmaemo5listpickselector.h:#ifdef Q_WS_MAEMO_5
+./src/maemo5/qmaemo5listpickselector.h:#endif // Q_WS_MAEMO_5
+./src/3rdparty/phonon/gstreamer/devicemanager.cpp:#ifdef Q_WS_MAEMO_5
+./src/3rdparty/phonon/gstreamer/videowidget.cpp:#if !defined(Q_WS_MAEMO_5) //We can't use videobalance on Maemo due to performance issues (this should really be detcted at run-time though)
+./src/3rdparty/webkit/WebKit/qt/tests/qgraphicswebview/tst_qgraphicswebview.cpp:#if defined(Q_WS_MAEMO_5) || defined(Q_WS_MAEMO_6) || defined(Q_OS_SYMBIAN)
+./src/3rdparty/webkit/WebKit/qt/tests/qwebpage/tst_qwebpage.cpp:#ifdef Q_WS_MAEMO_5
+./src/3rdparty/webkit/WebKit/qt/tests/qwebview/tst_qwebview.cpp:#if defined(Q_WS_MAEMO_5) || defined(Q_WS_MAEMO_6) || defined(Q_OS_SYMBIAN)
+./src/3rdparty/webkit/WebKit/qt/tests/qwebview/tst_qwebview.cpp:#if defined(Q_WS_MAEMO_5) || defined(Q_WS_MAEMO_6) || defined(Q_OS_SYMBIAN)
+./src/3rdparty/webkit/WebKit/qt/tests/qwebframe/tst_qwebframe.cpp:#if !defined(Q_WS_MAEMO_5)
+./src/3rdparty/webkit/WebKit/qt/tests/qwebframe/tst_qwebframe.cpp:#if !defined(Q_WS_MAEMO_5)
+./src/3rdparty/webkit/WebKit/qt/tests/qwebframe/tst_qwebframe.cpp:#ifdef Q_WS_MAEMO_5
+./src/3rdparty/webkit/WebKit/qt/WebCoreSupport/EditorClientQt.cpp:#if defined(Q_WS_MAEMO_5) || defined(Q_OS_SYMBIAN)
+./src/3rdparty/webkit/WebKit/qt/WebCoreSupport/EditorClientQt.cpp:#endif // Q_WS_MAEMO_5 || Q_OS_SYMBIAN
+./src/3rdparty/webkit/WebKit/qt/WebCoreSupport/ChromeClientQt.cpp:#if defined(Q_WS_MAEMO_5)
+./src/3rdparty/webkit/WebKit/qt/WebCoreSupport/ChromeClientQt.cpp:#if defined(Q_WS_MAEMO_5)
+./src/3rdparty/webkit/WebKit/qt/Api/qwebview.cpp:#ifdef Q_WS_MAEMO_5
+./src/3rdparty/webkit/WebKit/qt/Api/qwebview.cpp:#endif // Q_WS_MAEMO_5
+./src/3rdparty/webkit/WebKit/qt/Api/qwebview.cpp:#if defined(Q_WS_MAEMO_5)
+./src/3rdparty/webkit/WebKit/qt/Api/qwebpage.cpp:#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
+./src/3rdparty/webkit/WebCore/ChangeLog:        Replacing preprocessor conditional used in RenderThemeQt from Q_WS_MAEMO_5 to
+./src/network/socket/qabstractsocket.cpp:#ifdef Q_WS_MAEMO_5
+./src/network/socket/qabstractsocket.cpp:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/qmaemointernetconnectivity.h:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/qmaemointernetconnectivity.h:#endif //Q_WS_MAEMO_5
+./src/network/maemo/qgconfbackend.cpp:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/qgconfbackend.cpp:#endif //Q_WS_MAEMO_5
+./src/network/maemo/gconfsymbols_p.h:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/gconfsymbols_p.h:#endif //Q_WS_MAEMO_5
+./src/network/maemo/qgconfbackend_p.h:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/qgconfbackend_p.h:#endif //Q_WS_MAEMO_5
+./src/network/maemo/gconfsymbols.cpp:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/gconfsymbols.cpp:#endif //Q_WS_MAEMO_5
+./src/network/maemo/qmaemointernetconnectivity_p.h:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/qmaemointernetconnectivity_p.h:#endif //Q_WS_MAEMO_5
+./src/network/maemo/qmaemointernetconnectivity.cpp:#ifdef Q_WS_MAEMO_5
+./src/network/maemo/qmaemointernetconnectivity.cpp:#endif //Q_WS_MAEMO_5
+./src/network/ssl/qsslsocket_openssl.cpp:#if defined(Q_WS_MAEMO_5)
+./src/network/ssl/qsslsocket.cpp:#ifdef Q_WS_MAEMO_5
+./src/network/ssl/qsslsocket.cpp:#ifdef Q_WS_MAEMO_5
+./src/opengl/gl2paintengineex/qglengineshadersource_p.h:#ifdef Q_WS_MAEMO_5
+./src/declarative/graphicsitems/qdeclarativetextinput_p_p.h:#ifdef Q_WS_MAEMO_5
+./src/declarative/graphicsitems/qdeclarativetextedit_p_p.h:#ifdef Q_WS_MAEMO_5
+./tools/qml/loggerwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/loggerwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/proxysettings.h:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#if defined(Q_WS_MAEMO_5)
+./tools/qml/qmlruntime.cpp:#endif // Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifndef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/qmlruntime.cpp:#if defined(Q_WS_MAEMO_5)
+./tools/qml/qmlruntime.cpp:#endif // Q_WS_MAEMO_5
+./tools/qml/main.cpp:#ifdef Q_WS_MAEMO_5
+./tools/qml/proxysettings.cpp:#if !defined Q_WS_MAEMO_5
+./doc/src/platforms/winsystem.qdoc:    When compiling for this platform, the macro \c{Q_WS_MAEMO_5} is defined.
+./doc/src/platforms/platform-notes.qdoc:    with the platform. The Q_WS_MAEMO_5 macro can be used to conditionally
+./doc/src/examples/zoom.qdoc:    For platform independent code, surround them with \c{#ifdef Q_WS_MAEMO_5}.
+./examples/maemo5/widgetgallery/maemo5.h:#ifdef Q_WS_MAEMO_5
+./examples/maemo5/widgetgallery/maemo5.cpp:#ifdef Q_WS_MAEMO_5
+./examples/maemo5/widgetgallery/common.cpp:#ifdef Q_WS_MAEMO_5
+./examples/maemo5/widgetgallery/main.cpp:#ifdef Q_WS_MAEMO_5
+./examples/maemo5/widgetgallery/main.cpp:#ifdef Q_WS_MAEMO_5
+./examples/maemo5/widgetgallery/main.cpp:#ifdef Q_WS_MAEMO_5
+./examples/maemo5/widgetgallery/main.cpp:#ifdef Q_WS_MAEMO_5
+./examples/network/bearercloud/cloud.cpp:#if !defined(Q_WS_MAEMO_5) && !defined(Q_WS_MAEMO_6) && \
+./demos/embedded/fluidlauncher/fluidlauncher.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/qtbubblelevel/main.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/qtbubblelevel/main.cpp:#if defined(Q_WS_MAEMO_5) || defined(Q_OS_SYMBIAN) || defined(Q_WS_SIMULATOR)
+./demos/mobile/qtbubblelevel/taskswitcher.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/qtbubblelevel/taskswitcher.cpp:    #ifdef Q_WS_MAEMO_5
+./demos/mobile/qcamera/contactsdlg.cpp:#if defined Q_WS_MAEMO_5
+./demos/mobile/qcamera/businesscardhandling.cpp:#if defined Q_WS_MAEMO_5
+./demos/mobile/qcamera/businesscardhandling.cpp:#if defined Q_WS_MAEMO_5
+./demos/mobile/guitartuner/src/guitartuner.cpp:#elif defined(Q_WS_MAEMO_5)
+./demos/mobile/guitartuner/src/main.cpp:#elif defined(Q_WS_MAEMO_5) || defined(Q_WS_MAEMO_6)
+./demos/mobile/quickhit/plugins/LevelTemplate/leveltemplate.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/quickhit/plugins/LevelTwo/leveltwo.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/quickhit/plugins/LevelOne/levelone.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/quickhit/mainwindow.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/quickhit/mainwindow.cpp:#elif defined (Q_WS_MAEMO_5)
+./demos/mobile/quickhit/main.cpp:#if defined (Q_OS_SYMBIAN) || defined (Q_WS_MAEMO_5)
+./demos/mobile/quickhit/gameengine.cpp:#if defined Q_OS_SYMBIAN || defined Q_WS_MAEMO_5
+./demos/mobile/quickhit/gameengine.cpp:#if defined Q_OS_SYMBIAN || defined Q_WS_MAEMO_5
+./demos/mobile/quickhit/gameengine.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/quickhit/gameengine.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/quickhit/ga_src/GEAudioOut.cpp:#ifdef Q_WS_MAEMO_5
+./demos/mobile/quickhit/gameengine.h:#if defined Q_OS_SYMBIAN || defined Q_WS_MAEMO_5
+./demos/mobile/quickhit/gameengine.h:#if defined Q_OS_SYMBIAN || defined Q_WS_MAEMO_5
+./demos/mobile/quickhit/gameengine.h:#if defined Q_OS_SYMBIAN || defined Q_WS_MAEMO_5
+./tests/benchmarks/gui/graphicsview/functional/GraphicsViewBenchmark/main.cpp:#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
+./tests/benchmarks/gui/graphicsview/functional/GraphicsViewBenchmark/main.cpp:#if defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
+./tests/manual/bearerex/bearerex.h:#if defined(Q_WS_MAEMO_5) || defined(Q_WS_MAEMO_6)
+./tests/auto/qtreeview/tst_qtreeview.cpp:#ifdef Q_WS_MAEMO_5 //On Maemo 5 we have a greater default rowHeight
+./tests/auto/qgraphicsview/tst_qgraphicsview.cpp:#if defined(Q_OS_WINCE) || defined(Q_WS_MAEMO_5)
+./tests/auto/qgraphicsview/tst_qgraphicsview.cpp:#if defined(Q_OS_WINCE) || defined(Q_WS_MAEMO_5)
+./tests/auto/qgraphicsview/tst_qgraphicsview.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qgraphicsview/tst_qgraphicsview.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/mediaobject/tst_mediaobject.cpp:#if defined(Q_OS_WIN) || defined(Q_OS_MAC) || defined(Q_OS_SYMBIAN) || defined(Q_WS_MAEMO_5)
+./tests/auto/qlocalsocket/tst_qlocalsocket.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qaccessibility/tst_qaccessibility.cpp:#ifndef Q_WS_MAEMO_5 //Maemo 5 has extra Kinetic ScrollBars, so the sub-controls doesn't have valid rects
+./tests/auto/qaccessibility/tst_qaccessibility.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qaccessibility/tst_qaccessibility.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qaccessibility/tst_qaccessibility.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qaccessibility/tst_qaccessibility.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qlineedit/tst_qlineedit.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qheaderview/tst_qheaderview.cpp:#if defined( Q_OS_WINCE ) || defined( Q_WS_MAEMO_5 )
+./tests/auto/qheaderview/tst_qheaderview.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qnativesocketengine/tst_qnativesocketengine.cpp:#if !defined Q_OS_WIN && !defined Q_OS_SYMBIAN && !defined Q_WS_MAEMO_5
+./tests/auto/qgridlayout/tst_qgridlayout.cpp:#if defined(Q_WS_MAEMO_5)
+./tests/auto/qgridlayout/tst_qgridlayout.cpp:#if defined(Q_WS_MAEMO_5)
+./tests/auto/qgridlayout/tst_qgridlayout.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/languagechange/tst_languagechange.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qlocale/tst_qlocale.cpp:#if defined(Q_WS_MAEMO_5)
+./tests/auto/qlocale/tst_qlocale.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qscriptv8testsuite/tst_qscriptv8testsuite.cpp:#if !defined(Q_OS_LINUX) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmessagebox/tst_qmessagebox.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmessagebox/tst_qmessagebox.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmessagebox/tst_qmessagebox.cpp:#elif !defined(QT_NO_STYLE_CLEANLOOKS) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmessagebox/tst_qmessagebox.cpp:#elif !defined(QT_NO_STYLE_CLEANLOOKS) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qtcpsocket/tst_qtcpsocket.cpp:#if !defined(Q_OS_SYMBIAN) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qtcpsocket/tst_qtcpsocket.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmainwindow/tst_qmainwindow.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qstring/tst_qstring.cpp:#   ifndef Q_WS_MAEMO_5 //On Maemo 5 the posix locales are corrupt
+./tests/auto/qstring/tst_qstring.cpp:#   ifndef Q_WS_MAEMO_5 //On Maemo 5 the posix locales are corrupt
+./tests/auto/qgraphicsscene/tst_qgraphicsscene.cpp:#if (defined(Q_OS_WINCE) && !defined(GWES_ICONCURS)) || defined(Q_WS_MAEMO_5)
+./tests/auto/qabstractitemview/tst_qabstractitemview.cpp:#if defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qdialogbuttonbox/tst_qdialogbuttonbox.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qfocusevent/tst_qfocusevent.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwindowsurface/tst_qwindowsurface.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwindowsurface/tst_qwindowsurface.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qdockwidget/tst_qdockwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qabstractslider/tst_qabstractslider.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/qabstractslider/tst_qabstractslider.cpp:#ifdef Q_WS_MAEMO_5 //ScrollBars are passive on Maemo5 and don't react on input
+./tests/auto/qgraphicsproxywidget/tst_qgraphicsproxywidget.cpp:#if (defined(Q_OS_WINCE) && (!defined(GWES_ICONCURS) || defined(QT_NO_CURSOR)) ) || defined(Q_WS_MAEMO_5)
+./tests/auto/qgraphicsproxywidget/tst_qgraphicsproxywidget.cpp:#ifdef Q_WS_MAEMO_5 //The Test is too fast for the Window Manager
+./tests/auto/qgraphicsproxywidget/tst_qgraphicsproxywidget.cpp:#ifdef Q_WS_MAEMO_5 //The popup is Fullscreen
+./tests/auto/qgraphicsproxywidget/tst_qgraphicsproxywidget.cpp:#ifdef Q_WS_MAEMO_5 //The popup is Fullscreen
+./tests/auto/qgraphicsproxywidget/tst_qgraphicsproxywidget.cpp:#ifndef Q_WS_MAEMO_5 //On Maemo 5 the ComboBox has a special behaviour, so the Popup does not exist
+./tests/auto/qgraphicsproxywidget/tst_qgraphicsproxywidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qgraphicswidget/tst_qgraphicswidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qgraphicswidget/tst_qgraphicswidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qstylesheetstyle/tst_qstylesheetstyle.cpp:#ifdef Q_WS_MAEMO_5 //We have to wait until the scrollbar-indicators disappears
+./tests/auto/qstylesheetstyle/tst_qstylesheetstyle.cpp:#ifdef Q_WS_MAEMO_5 //On Maemo 5 QMenus use the native Maemo 5 Menu
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if defined(Q_OS_WINCE) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmdiarea/tst_qmdiarea.cpp:#if !defined (Q_WS_MAC) && !defined(Q_OS_WINCE) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qlistview/tst_qlistview.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qlistview/tst_qlistview.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmenu/tst_qmenu.cpp:#ifndef Q_WS_MAEMO_5 //tst_QMenu::pushButtonPopulateOnAboutToShow() fails because the Menu is too long and positioned above the button
+./tests/auto/qmenu/tst_qmenu.cpp:#elif defined(Q_WS_MAEMO_5)
+./tests/auto/qmenu/tst_qmenu.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmenu/tst_qmenu.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmenu/tst_qmenu.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qscrollbar/tst_qscrollbar.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qdialog/tst_qdialog.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_IRIX) && !defined(Q_OS_HPUX) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qdialog/tst_qdialog.cpp:#if defined(Q_WS_MAC) || (defined(Q_WS_WINCE) && defined(_ARM_)) || defined(Q_WS_MAEMO_5)
+./tests/auto/qtableview/tst_qtableview.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qtableview/tst_qtableview.cpp:#ifdef Q_WS_MAEMO_5 //On Maemo 5 the Rows have to be big enough to select the items
+./tests/auto/qsplitter/tst_qsplitter.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qtreewidget/tst_qtreewidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qcombobox/tst_qcombobox.cpp:#ifdef Q_WS_MAEMO_5 //On Maemo5 some widgets have a custom palette. The test have to verify only the base Color
+./tests/auto/qcombobox/tst_qcombobox.cpp:/*#ifdef Q_WS_MAEMO_5
+./tests/auto/qcombobox/tst_qcombobox.cpp:#if !defined(QT_NO_STYLE_CLEANLOOKS) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qcombobox/tst_qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qcombobox/tst_qcombobox.cpp:#ifdef Q_WS_MAEMO_5 //Maemo 5 has other display margins
+./tests/auto/qcombobox/tst_qcombobox.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qstatusbar/tst_qstatusbar.cpp:#if !defined(Q_WS_MAC) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qtextedit/tst_qtextedit.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qtextedit/tst_qtextedit.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qtextedit/tst_qtextedit.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if !defined(Q_WS_MAC) && !defined(Q_OS_WINCE_WM) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#if defined(Q_WS_MAC) || defined(Q_OS_WINCE_WM) || defined(Q_WS_MAEMO_5)
+./tests/auto/qmenubar/tst_qmenubar.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmenubar/tst_qmenubar.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmenubar/tst_qmenubar.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/gestures/tst_gestures.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5 //On Maemo 5 the wizard buttons are layouted vertically and have a other order
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5 //The Maemo 5 Wizard has no Cancel-Button
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5 //On Maemo 5 the buttons are layouted vertically
+./tests/auto/qwizard/tst_qwizard.cpp:#ifdef Q_WS_MAEMO_5 //No Cancel Button and vertical layout on Maemo 5
+./tests/auto/qlistwidget/tst_qlistwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qlistwidget/tst_qlistwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qgl/tst_qgl.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#if !defined (Q_WS_MAC) && !defined (Q_OS_WINCE) && !defined (Q_WS_MAEMO_5)
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#if !defined (Q_WS_MAC) && !defined (Q_OS_WINCE) && !defined (Q_WS_MAEMO_5)
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#if !defined (Q_WS_MAC) && !defined (Q_OS_WINCE) && !defined (Q_WS_MAEMO_5)
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#if !defined (Q_WS_MAC) && !defined (Q_OS_WINCE) && !defined (Q_WS_MAEMO_5)
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#if !defined (Q_WS_MAC) && !defined (Q_OS_WINCE) && !defined (Q_WS_MAEMO_5)
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#if !defined (Q_WS_MAC) && !defined (Q_OS_WINCE) && !defined (Q_WS_MAEMO_5)
+./tests/auto/qmdisubwindow/tst_qmdisubwindow.cpp:#if !defined( Q_WS_MAC) && !defined( Q_OS_WINCE) && !defined (Q_WS_MAEMO_5)
+./tests/auto/declarative/qmlvisual/tst_qmlvisual.cpp:#elif defined(Q_WS_MAEMO_5)
+./tests/auto/declarative/qmlvisual/tst_qmlvisual.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/declarative/qdeclarativeviewer/tst_qdeclarativeviewer.cpp:#if defined(Q_OS_MAC) || defined(Q_WS_MAEMO_5) || defined(Q_WS_S60)
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#if !defined(Q_WS_QWS) && !defined(Q_OS_WINCE) && !defined (Q_WS_S60) && !defined(Q_WS_MAEMO_5)
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qwidget/tst_qwidget.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/platformquirks.h:#ifdef Q_WS_MAEMO_5
+./tests/auto/platformquirks.h:#ifdef Q_WS_MAEMO_5
+./tests/auto/platformquirks.h:#ifdef Q_WS_MAEMO_5
+./tests/auto/platformquirks.h:#ifdef Q_WS_MAEMO_5
+./tests/auto/qpushbutton/tst_qpushbutton.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qdatetime/tst_qdatetime.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qdatetime/tst_qdatetime.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qtoolbar/tst_qtoolbar.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qitemdelegate/tst_qitemdelegate.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qtoolbutton/tst_qtoolbutton.cpp:#ifdef Q_WS_MAEMO_5
+./tests/auto/qsizegrip/tst_qsizegrip.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/qsizegrip/tst_qsizegrip.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/qsizegrip/tst_qsizegrip.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/qsizegrip/tst_qsizegrip.cpp:#ifndef Q_WS_MAEMO_5
+./tests/auto/qsizegrip/tst_qsizegrip.cpp:#ifdef Q_WS_MAEMO_5
+
