@@ -1822,6 +1822,10 @@ void QXcbWindow::setWmWindowType(QXcbWindowFunctions::WmWindowTypes types, Qt::W
     else
         atoms.append(atom(QXcbAtom::_NET_WM_WINDOW_TYPE_NORMAL));
 
+    // the Maemo5 WM doesn't support multiple window types on a single window
+    if (atoms.count() > 1)
+        atoms.resize(1);
+
     if (atoms.isEmpty()) {
         xcb_delete_property(xcb_connection(), m_window, atom(QXcbAtom::_NET_WM_WINDOW_TYPE));
     } else {
