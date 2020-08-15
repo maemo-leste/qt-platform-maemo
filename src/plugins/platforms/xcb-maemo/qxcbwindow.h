@@ -48,8 +48,10 @@
 #include <xcb/sync.h>
 
 #include "qxcbobject.h"
+#include "qxcbwindowfilter.h"
 
 #include <QtPlatformHeaders/qxcbwindowfunctions.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -184,6 +186,12 @@ public:
 
     static QString windowTitle(const QXcbConnection *conn, xcb_window_t window);
 
+    // Maemo additions
+    bool windowDynamicPropertyChanged(QObject *obj, QByteArray name);
+    void maemo5ShowProgressIndicator(bool on);
+    void maemo5SetComposited(bool on);
+    void maemo5SetStackedWindow(bool on);
+
 public Q_SLOTS:
     void updateSyncRequestCounter();
 
@@ -241,6 +249,8 @@ protected:
                                 quint8 mode, quint8 detail, xcb_timestamp_t timestamp);
 
     xcb_window_t m_window = 0;
+    QWindow* m_qwindow = 0;
+    QXcbWindowPropertyFilter * m_filter = 0;
     xcb_colormap_t m_cmap = 0;
 
     uint m_depth = 0;

@@ -306,6 +306,9 @@ namespace QXcbAtom {
         // Maemo specific atoms
         _MB_GRAB_TRANSFER,
         _HILDON_WM_WINDOW_TYPE_APP_MENU,
+        _HILDON_WM_WINDOW_PROGRESS_INDICATOR,
+        _HILDON_NON_COMPOSITED_WINDOW,
+        _HILDON_STACKABLE_WINDOW,
 
         NPredefinedAtoms,
 
