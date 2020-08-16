@@ -2195,6 +2195,9 @@ void QXcbWindow::handleClientMessageEvent(const xcb_client_message_event_t *even
 
         maemo5ShowApplicationMenu();
 
+    } else if (event->type == atom(QXcbAtom::_HILDON_LOADING_SCREENSHOT)) {
+        // Let's just check for it. We don't need to do anything.
+        //
     } else {
         qCWarning(lcQpaXcb) << "Unhandled client message: " << connection()->atomName(event->type);
     }
