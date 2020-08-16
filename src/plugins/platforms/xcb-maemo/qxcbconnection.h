@@ -309,6 +309,7 @@ namespace QXcbAtom {
         _HILDON_WM_WINDOW_PROGRESS_INDICATOR,
         _HILDON_NON_COMPOSITED_WINDOW,
         _HILDON_STACKABLE_WINDOW,
+        _HILDON_LOADING_SCREENSHOT,
 
         NPredefinedAtoms,
 
