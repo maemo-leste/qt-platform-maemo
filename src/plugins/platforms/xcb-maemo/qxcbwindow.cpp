@@ -283,7 +283,7 @@ static const char *wm_window_role_property_id = "_q_xcb_wm_window_role";
 QXcbWindow::QXcbWindow(QWindow *window)
     : QPlatformWindow(window)
 {
-    qCWarning(lcQpaXcb) << "Constructor called: " << window;
+    //qCDebug(lcQpaXcb) << "Constructor called: " << window;
     // Store reference to QWindow so that the filter can access it in create()
     m_qwindow = window;
     setConnection(xcbScreen()->connection());
@@ -1666,29 +1666,35 @@ QSurfaceFormat QXcbWindow::format() const
 
 bool QXcbWindow::windowDynamicPropertyChanged(QObject *obj, QByteArray name) {
 
-    qCWarning(lcQpaXcb) << "windowDynamicPropertyChanged" << obj->property(name);
+    //qCDebug(lcQpaXcb) << "windowDynamicPropertyChanged" << obj->property(name);
 
     if (name == QString("X-Maemo-Progress")) {
         const QVariant var = obj->property(name);
-        int val = var.toInt();
-        qCWarning(lcQpaXcb) << "X-Maemo-Progress val" << val;
-
-        maemo5ShowProgressIndicator(val == 1);
+        bool ok = false;
+        int val = var.toInt(&ok);
+        if (ok) {
+            //qCDebug(lcQpaXcb) << "X-Maemo-Progress = " << val;
+            maemo5ShowProgressIndicator(val == 1);
+        }
     } else if (name == QString("X-Maemo-NotComposited")) {
         // TODO: We also need fullscreen checks elsewhere
         const QVariant var = obj->property(name);
-        int val = var.toInt();
-        qCWarning(lcQpaXcb) << "X-Maemo-NotComposited val" << val;
-
-        maemo5SetComposited(val == 1);
+        bool ok = false;
+        int val = var.toInt(&ok);
+        if (ok) {
+            //qCDebug(lcQpaXcb) << "X-Maemo-NotComposited = " << val;
+            maemo5SetComposited(val == 1);
+        }
     } else if (name == QString("X-Maemo-StackedWindow")) {
         const QVariant var = obj->property(name);
-        int val = var.toInt();
-        qCWarning(lcQpaXcb) << "X-Maemo-StackedWindow val" << val;
-
-        maemo5SetStackedWindow(val);
+        bool ok = false;
+        int val = var.toInt(&ok);
+        if (ok) {
+            //qCDebug(lcQpaXcb) << "X-Maemo-StackedWindow = " << val;
+            maemo5SetStackedWindow(val);
+        }
     } else {
-        // We don't care if we don't know it
+        // We don't care if we don't know the property
     }
 
     // We return false so that we don't filter this out for others
@@ -1804,11 +1810,8 @@ void QXcbWindow::maemo5SetStackedWindow(bool on)
         QWindow * pw = m_qwindow;
 
         while (1) {
-            qCWarning(lcQpaXcb) << "pw: " << pw->winId();
             for (QWidget *widget : topLevelWidgets) {
                 if (widget->isWindow() && widget->winId() == pw->winId()) {
-                    qCWarning(lcQpaXcb) << "Matching widget: " << widget;
-                    qCWarning(lcQpaXcb) << "Matching widget parent: " << widget->parent();
 
                     if (widget->parent()) {
                         position++;
@@ -1816,7 +1819,7 @@ void QXcbWindow::maemo5SetStackedWindow(bool on)
 
                         pw = wid->windowHandle();
 
-                        const QVariant var = pw->property("X-Maemo-StackedWindow");
+                        const QVariant var = wid->property("X-Maemo-StackedWindow");
                         bool ok = false;
                         int val = var.toInt(&ok);
                         if (ok && (val == 1))
@@ -1828,7 +1831,7 @@ void QXcbWindow::maemo5SetStackedWindow(bool on)
             break;
         }
 
-        qCWarning(lcQpaXcb) << "Position: " << position;
+        //qCDebug(lcQpaXcb) << "Position: " << position;
         xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_stackable_window, XCB_ATOM_INTEGER, 32, 1, &position);
     } else {
         xcb_delete_property(xcb_connection(), m_window, hildon_stackable_window);
@@ -1845,7 +1848,7 @@ void QXcbWindow::maemo5SetComposited(bool off)
     long hildon_non_composited_window = atom(QXcbAtom::_HILDON_WM_WINDOW_PROGRESS_INDICATOR);
 
     if (off) {
-        qCWarning(lcQpaXcb) << "Compositing OFF" << off;
+        //qCDebug(lcQpaXcb) << "Compositing OFF" << off;
         long on = 1;
         xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_non_composited_window, XCB_ATOM_INTEGER, 32, 1, &on);
     } else {
@@ -1857,7 +1860,7 @@ void QXcbWindow::maemo5ShowProgressIndicator(bool on)
 {
     long hildon_wm_progress_indicator = atom(QXcbAtom::_HILDON_WM_WINDOW_PROGRESS_INDICATOR);
     if (on) {
-        qCWarning(lcQpaXcb) << "Progress ON" << on;
+        //qCDebug(lcQpaXcb) << "Progress ON" << on;
         long state = 1;
         xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_wm_progress_indicator, XCB_ATOM_INTEGER, 32, 1, &state);
     } else {

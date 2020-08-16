@@ -21,6 +21,7 @@ SOURCES = \
         qxcbkeyboard.cpp \
         qxcbmime.cpp \
         qxcbscreen.cpp \
+        qxcbwidgetfilter.cpp \
         qxcbwindowfilter.cpp \
         qxcbwindow.cpp \
         qxcbbackingstore.cpp \
@@ -40,6 +41,7 @@ HEADERS = \
         qxcbmime.h \
         qxcbobject.h \
         qxcbscreen.h \
+        qxcbwidgetfilter.h \
         qxcbwindowfilter.h \
         qxcbwindow.h \
         qxcbbackingstore.h \

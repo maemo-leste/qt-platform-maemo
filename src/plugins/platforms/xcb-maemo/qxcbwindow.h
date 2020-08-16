@@ -47,8 +47,8 @@
 #include <xcb/xcb.h>
 #include <xcb/sync.h>
 
-#include "qxcbobject.h"
 #include "qxcbwindowfilter.h"
+#include "qxcbobject.h"
 
 #include <QtPlatformHeaders/qxcbwindowfunctions.h>
 

@@ -3,6 +3,7 @@
 
 #include <qpa/qplatformwindow.h>
 #include <QtPlatformHeaders/qxcbwindowfunctions.h>
+#include "qxcbwidgetfilter.h"
 #include "qxcbconnection.h"
 
 
@@ -18,8 +19,9 @@ public:
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 private:
-    QWindow* m_qwindow;
-    QXcbWindow* m_xcbwindow;
+    QWindow* m_qwindow = 0;
+    QXcbWidgetPropertyFilter* m_widgetfilter = 0;
+    QXcbWindow* m_xcbwindow = 0;
 };
 
 QT_END_NAMESPACE
