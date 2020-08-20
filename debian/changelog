@@ -1,3 +1,11 @@
+qt-platform-maemo (1:5.0.1-1) unstable; urgency=low
+
+  * Add some hildon features like stackable windows, qmenu, progress indicator
+  * Make dialogs render properly
+  * This is not a finished product!
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Thu, 09 Apr 2020 10:34:57 +0200
+
 qt-platform-maemo (1:5.0.0-1) unstable; urgency=low
 
   * Initial package
