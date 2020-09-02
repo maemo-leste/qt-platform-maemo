@@ -1,3 +1,10 @@
+qt-platform-maemo (1:5.0.2-1) unstable; urgency=low
+
+  * Add spec file
+  * This is not a finished product!
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Wed, 02 Sep 2020 19:42:38 +0200
+
 qt-platform-maemo (1:5.0.1-1) unstable; urgency=low
 
   * Add some hildon features like stackable windows, qmenu, progress indicator
