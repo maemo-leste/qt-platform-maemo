@@ -19,7 +19,6 @@ override_dh_auto_install:
 	
 	# Remove the development stuff of the installed plugins
 	rm -rfv $(CURDIR)/debian/qt-platform-maemo/usr/lib/*/cmake/
-	rm -rfv $(CURDIR)/debian/qt-platform-maemo/usr/lib/*/qt5/mkspecs/modules/
-	cp -a $(CURDIR)/spec/maemo $(CURDIR)/debian/qt-platform-maemo/usr/lib/*/qt5/mkspecs/
+	rm -rfv $(CURDIR)/debian/qt-platform-maemo/usr/lib/*/qt5/mkspecs/
 	rm -rfv $(CURDIR)/debian/qt-platform-maemo/usr/lib/*/*.la
 	rm -rfv $(CURDIR)/debian/qt-platform-maemo/usr/lib/*/*.prl
