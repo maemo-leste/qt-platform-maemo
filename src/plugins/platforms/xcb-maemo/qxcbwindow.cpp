@@ -1665,8 +1665,7 @@ QSurfaceFormat QXcbWindow::format() const
 }
 
 bool QXcbWindow::windowDynamicPropertyChanged(QObject *obj, QByteArray name) {
-
-    //qCDebug(lcQpaXcb) << "windowDynamicPropertyChanged" << obj->property(name);
+    // TODO: use QVariant::canConvert(QMetaType::Int), etc
 
     if (name == QString("X-Maemo-Progress")) {
         const QVariant var = obj->property(name);
@@ -1693,6 +1692,15 @@ bool QXcbWindow::windowDynamicPropertyChanged(QObject *obj, QByteArray name) {
             //qCDebug(lcQpaXcb) << "X-Maemo-StackedWindow = " << val;
             maemo5SetStackedWindow(val);
         }
+    } else if (name == QString("X-Maemo-Orientation")) {
+        const QVariant var = obj->property(name);
+        bool ok = false;
+        int val = var.toInt(&ok);
+
+        if (ok) {
+            maemo5SetSupportedOrientation(val);
+        }
+
     } else {
         // We don't care if we don't know the property
     }
@@ -1835,6 +1843,32 @@ void QXcbWindow::maemo5SetStackedWindow(bool on)
         xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_stackable_window, XCB_ATOM_INTEGER, 32, 1, &position);
     } else {
         xcb_delete_property(xcb_connection(), m_window, hildon_stackable_window);
+    }
+}
+
+void QXcbWindow::maemo5SetSupportedOrientation(int orientation)
+{
+    long hildon_portrait_mode_request = atom(QXcbAtom::_HILDON_PORTRAIT_MODE_REQUEST);
+    long hildon_portrait_mode_support = atom(QXcbAtom::_HILDON_PORTRAIT_MODE_SUPPORT);
+
+    // TODO: Make enum for this
+
+    qCDebug(lcQpaXcb) << "maemo5SetSupportedOrientation" << orientation;
+
+    if (orientation == 0) {
+        // landscape only
+        xcb_delete_property(xcb_connection(), m_window, hildon_portrait_mode_request);
+        xcb_delete_property(xcb_connection(), m_window, hildon_portrait_mode_support);
+    } else if (orientation == 1) {
+        // portrait only
+        long on = 1;
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_portrait_mode_request, XCB_ATOM_CARDINAL, 32, 1, &on);
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_portrait_mode_support, XCB_ATOM_CARDINAL, 32, 1, &on);
+    } else if (orientation == 2) {
+        // both/auto
+        long on = 1;
+        xcb_delete_property(xcb_connection(), m_window, hildon_portrait_mode_request);
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_portrait_mode_support, XCB_ATOM_CARDINAL, 32, 1, &on);
     }
 }
 

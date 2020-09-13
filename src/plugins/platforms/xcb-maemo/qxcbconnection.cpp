@@ -2029,6 +2029,8 @@ static const char * xcb_atomnames = {
     "_HILDON_NON_COMPOSITED_WINDOW\0"
     "_HILDON_STACKABLE_WINDOW\0"
     "_HILDON_LOADING_SCREENSHOT\0"
+    "_HILDON_PORTRAIT_MODE_REQUEST\0"
+    "_HILDON_PORTRAIT_MODE_SUPPORT\0"
 
     // \0\0 terminates loop.
 };
