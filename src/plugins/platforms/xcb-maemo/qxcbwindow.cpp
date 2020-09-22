@@ -1615,7 +1615,7 @@ void QXcbWindow::maemo5SetStackedWindow(bool on)
 
         while (1) {
             for (QWidget *widget : topLevelWidgets) {
-                if (widget->isWindow() && widget->winId() == pw->winId()) {
+                if (pw && widget->isWindow() && widget->winId() == pw->winId()) {
 
                     if (widget->parent()) {
                         position++;
