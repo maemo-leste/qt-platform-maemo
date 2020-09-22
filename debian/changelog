@@ -1,3 +1,9 @@
+qt-platform-maemo (1:5.0.4-1) unstable; urgency=low
+
+  * Add orientation support
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Tue, 22 Sep 2020 22:50:29 +0200
+
 qt-platform-maemo (1:5.0.3-1) unstable; urgency=low
 
   * Remove spec file, now provided by libqt5maemo5-dev
