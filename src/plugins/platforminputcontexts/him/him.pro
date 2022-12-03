@@ -23,15 +23,10 @@ load(qt_plugin)
 
 QMAKE_USE += xcb_xlib
 
-!qtConfig(system-xcb) {
-    QMAKE_USE += xcb-static xcb
-} else {
-    qtConfig(xkb): QMAKE_USE += xcb_xkb
-    qtConfig(xcb-render): QMAKE_USE += xcb_render
-    QMAKE_USE += xcb_syslibs
-}
+QMAKE_USE += xcb_xkb
+QMAKE_USE += xcb_render
 
 PKGCONFIG += hildon-input-method-framework-3.0 gtk+-2.0
 
 QMAKE_LFLAGS = $(QMAKE_LFLAGS) -L$$OUT_PWD/../../../../lib/ -lQt5XcbMaemoQpa
-QMAKE_CXXFLAGS = $(QMAKE_CXXFLAGS) -Ixcb
+QMAKE_CXXFLAGS = $(QMAKE_CXXFLAGS) -Ixcb -I../../platforms/xcb-maemo/
