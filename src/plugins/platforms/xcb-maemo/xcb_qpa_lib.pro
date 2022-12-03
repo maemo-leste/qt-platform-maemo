@@ -7,7 +7,8 @@ QT += \
     service_support-private theme_support-private \
     fontdatabase_support-private \
     edid_support-private \
-    xkbcommon_support-private
+    xkbcommon_support-private \
+    widgets widgets-private
 
 qtHaveModule(linuxaccessibility_support-private): \
     QT += linuxaccessibility_support-private
@@ -36,7 +37,8 @@ SOURCES = \
         qxcbconnection_basic.cpp \
         qxcbconnection_screens.cpp \
         qxcbconnection_xi2.cpp \
-        qxcbatom.cpp
+        qxcbatom.cpp \
+        qmenu_maemo.cpp
 
 HEADERS = \
         qxcbclipboard.h \
@@ -57,7 +59,8 @@ HEADERS = \
         qxcbeventqueue.h \
         qxcbeventdispatcher.h \
         qxcbconnection_basic.h \
-        qxcbatom.h
+        qxcbatom.h \
+        qmenu_maemo.h
 
 qtConfig(draganddrop) {
     SOURCES += qxcbdrag.cpp
