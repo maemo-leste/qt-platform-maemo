@@ -240,6 +240,11 @@ public:
         EDID_DATA,
         XFree86_DDC_EDID1_RAWDATA,
 
+        // Maemo specific atoms
+        _MB_GRAB_TRANSFER,
+        _HILDON_WM_WINDOW_TYPE_APP_MENU,
+
+
         NAtoms
     };
 

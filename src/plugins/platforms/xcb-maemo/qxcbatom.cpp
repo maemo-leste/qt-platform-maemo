@@ -234,6 +234,11 @@ static const char *xcb_atomnames = {
     "EDID\0"
     "EDID_DATA\0"
     "XFree86_DDC_EDID1_RAWDATA\0"
+
+    // Maemo specific atoms
+    "_MB_GRAB_TRANSFER\0"
+    "_HILDON_WM_WINDOW_TYPE_APP_MENU\0"
+
     // \0\0 terminates loop.
 };
 
