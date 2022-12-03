@@ -27,6 +27,7 @@ QXcbWidgetPropertyFilter::QXcbWidgetPropertyFilter(QWidget* widget, QXcbWindow* 
     this->m_xcbwindow->windowDynamicPropertyChanged(m_qwidget, "X-Maemo-Progress");
     this->m_xcbwindow->windowDynamicPropertyChanged(m_qwidget, "X-Maemo-NotComposited");
     this->m_xcbwindow->windowDynamicPropertyChanged(m_qwidget, "X-Maemo-StackedWindow");
+    this->m_xcbwindow->windowDynamicPropertyChanged(m_qwidget, "X-Maemo-Orientation");
 }
 
 QXcbWidgetPropertyFilter::~QXcbWidgetPropertyFilter() {
