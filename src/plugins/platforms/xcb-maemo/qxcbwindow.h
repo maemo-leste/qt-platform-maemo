@@ -192,6 +192,7 @@ public:
     void maemo5ShowProgressIndicator(bool on);
     void maemo5SetComposited(bool on);
     void maemo5SetStackedWindow(bool on);
+    void maemo5SetSupportedOrientation(int orientation);
 
 public Q_SLOTS:
     void updateSyncRequestCounter();
