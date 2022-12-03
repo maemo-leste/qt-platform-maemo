@@ -47,6 +47,7 @@
 #include <xcb/xcb.h>
 #include <xcb/sync.h>
 
+#include "qxcbwindowfilter.h"
 #include "qxcbobject.h"
 
 #include <QtPlatformHeaders/qxcbwindowfunctions.h>
@@ -186,6 +187,12 @@ public:
     int swapInterval() const { return m_swapInterval; }
     void setSwapInterval(int swapInterval) { m_swapInterval = swapInterval; }
 
+    // Maemo additions
+    bool windowDynamicPropertyChanged(QObject *obj, QByteArray name);
+    void maemo5ShowProgressIndicator(bool on);
+    void maemo5SetComposited(bool on);
+    void maemo5SetStackedWindow(bool on);
+
 public Q_SLOTS:
     void updateSyncRequestCounter();
 
@@ -238,6 +245,8 @@ protected:
                                 quint8 mode, quint8 detail, xcb_timestamp_t timestamp);
 
     xcb_window_t m_window = 0;
+    QWindow* m_qwindow = 0;
+    QXcbWindowPropertyFilter * m_filter = 0;
 
     uint m_depth = 0;
     QImage::Format m_imageFormat = QImage::Format_ARGB32_Premultiplied;

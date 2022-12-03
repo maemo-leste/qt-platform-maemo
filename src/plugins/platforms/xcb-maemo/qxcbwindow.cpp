@@ -60,6 +60,7 @@
 #include "qxcbsystemtraytracker.h"
 
 #include "qmenu_maemo.h"
+#include "qxcbwindowfilter.h"
 #include <QtWidgets/qapplication.h>
 
 #include <qpa/qplatformintegration.h>
@@ -246,6 +247,10 @@ static const char *wm_window_role_property_id = "_q_xcb_wm_window_role";
 QXcbWindow::QXcbWindow(QWindow *window)
     : QPlatformWindow(window)
 {
+    //qCDebug(lcQpaXcb) << "Constructor called: " << window;
+    // Store reference to QWindow so that the filter can access it in create()
+    m_qwindow = window;
+
     setConnection(xcbScreen()->connection());
 }
 
@@ -269,6 +274,8 @@ enum : quint32 {
 void QXcbWindow::create()
 {
     destroy();
+
+    m_filter = new QXcbWindowPropertyFilter(m_qwindow, this);
 
     m_windowState = Qt::WindowNoState;
     m_trayIconWindow = isTrayIconWindow(window());
@@ -536,6 +543,11 @@ QXcbForeignWindow::~QXcbForeignWindow()
 
 void QXcbWindow::destroy()
 {
+    if (this->m_filter) {
+        delete this->m_filter;
+        m_qwindow = 0;
+    }
+
     if (connection()->focusWindow() == this)
         doFocusOut();
     if (connection()->mouseGrabber() == this)
@@ -891,6 +903,9 @@ QXcbWindow::NetWmStates QXcbWindow::netWmStates()
             result |= NetWmStateDemandsAttention;
         if (statesEnd != std::find(states, statesEnd, atom(QXcbAtom::_NET_WM_STATE_HIDDEN)))
             result |= NetWmStateHidden;
+
+        // XXX: Merlijn: handle full screen
+
     } else {
         qCDebug(lcQpaXcb, "getting net wm state (%x), empty\n", m_window);
     }
@@ -1037,6 +1052,7 @@ void QXcbWindow::setNetWmState(Qt::WindowStates state)
     }
 
     if ((m_windowState ^ state) & Qt::WindowFullScreen)
+        // XXX: Merlijn: handle full screen
         setNetWmState(state & Qt::WindowFullScreen, atom(QXcbAtom::_NET_WM_STATE_FULLSCREEN));
 }
 
@@ -1443,6 +1459,43 @@ QSurfaceFormat QXcbWindow::format() const
     return m_format;
 }
 
+bool QXcbWindow::windowDynamicPropertyChanged(QObject *obj, QByteArray name) {
+
+    //qCDebug(lcQpaXcb) << "windowDynamicPropertyChanged" << obj->property(name);
+
+    if (name == QString("X-Maemo-Progress")) {
+        const QVariant var = obj->property(name);
+        bool ok = false;
+        int val = var.toInt(&ok);
+        if (ok) {
+            //qCDebug(lcQpaXcb) << "X-Maemo-Progress = " << val;
+            maemo5ShowProgressIndicator(val == 1);
+        }
+    } else if (name == QString("X-Maemo-NotComposited")) {
+        // TODO: We also need fullscreen checks elsewhere
+        const QVariant var = obj->property(name);
+        bool ok = false;
+        int val = var.toInt(&ok);
+        if (ok) {
+            //qCDebug(lcQpaXcb) << "X-Maemo-NotComposited = " << val;
+            maemo5SetComposited(val == 1);
+        }
+    } else if (name == QString("X-Maemo-StackedWindow")) {
+        const QVariant var = obj->property(name);
+        bool ok = false;
+        int val = var.toInt(&ok);
+        if (ok) {
+            //qCDebug(lcQpaXcb) << "X-Maemo-StackedWindow = " << val;
+            maemo5SetStackedWindow(val);
+        }
+    } else {
+        // We don't care if we don't know the property
+    }
+
+    // We return false so that we don't filter this out for others
+    return false;
+}
+
 void QXcbWindow::setWmWindowTypeStatic(QWindow *window, QXcbWindowFunctions::WmWindowTypes windowTypes)
 {
     window->setProperty(wm_window_type_property_id, QVariant::fromValue(static_cast<int>(windowTypes)));
@@ -1536,6 +1589,78 @@ QXcbWindowFunctions::WmWindowTypes QXcbWindow::wmWindowTypes() const
         }
     }
     return result;
+}
+
+// XXX: Move elsewhere?
+void QXcbWindow::maemo5SetStackedWindow(bool on)
+{
+    long hildon_stackable_window = atom(QXcbAtom::_HILDON_STACKABLE_WINDOW);
+
+    if (on) {
+        int position = 0;
+
+        // We need to reconstruct the mapping between top level widgets and
+        // QWindows based on their ->winId()
+        const QWidgetList topLevelWidgets = QApplication::topLevelWidgets();
+        QWindow * pw = m_qwindow;
+
+        while (1) {
+            for (QWidget *widget : topLevelWidgets) {
+                if (widget->isWindow() && widget->winId() == pw->winId()) {
+
+                    if (widget->parent()) {
+                        position++;
+                        QWidget* wid = reinterpret_cast<QWidget*>(widget->parent());
+
+                        pw = wid->windowHandle();
+
+                        const QVariant var = wid->property("X-Maemo-StackedWindow");
+                        bool ok = false;
+                        int val = var.toInt(&ok);
+                        if (ok && (val == 1))
+                            continue;
+                    }
+                }
+            }
+
+            break;
+        }
+
+        //qCDebug(lcQpaXcb) << "Position: " << position;
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_stackable_window, XCB_ATOM_INTEGER, 32, 1, &position);
+    } else {
+        xcb_delete_property(xcb_connection(), m_window, hildon_stackable_window);
+    }
+}
+
+void QXcbWindow::maemo5SetComposited(bool off)
+{
+    // TODO: We also want to always disable compositing when a window is
+    // fullscreen, how do we capture that? Elsewhere in QXcbWindow I assume
+    // TODO: And we also want to handle when we are no longer fullscreen... and
+    // unset the value if the dynamic property is not set.
+
+    long hildon_non_composited_window = atom(QXcbAtom::_HILDON_WM_WINDOW_PROGRESS_INDICATOR);
+
+    if (off) {
+        //qCDebug(lcQpaXcb) << "Compositing OFF" << off;
+        long on = 1;
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_non_composited_window, XCB_ATOM_INTEGER, 32, 1, &on);
+    } else {
+        xcb_delete_property(xcb_connection(), m_window, hildon_non_composited_window);
+    }
+}
+
+void QXcbWindow::maemo5ShowProgressIndicator(bool on)
+{
+    long hildon_wm_progress_indicator = atom(QXcbAtom::_HILDON_WM_WINDOW_PROGRESS_INDICATOR);
+    if (on) {
+        //qCDebug(lcQpaXcb) << "Progress ON" << on;
+        long state = 1;
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_wm_progress_indicator, XCB_ATOM_INTEGER, 32, 1, &state);
+    } else {
+        xcb_delete_property(xcb_connection(), m_window, hildon_wm_progress_indicator);
+    }
 }
 
 void QXcbWindow::setWmWindowType(QXcbWindowFunctions::WmWindowTypes types, Qt::WindowFlags flags)
@@ -2263,6 +2388,7 @@ void QXcbWindow::handlePropertyNotifyEvent(const xcb_property_notify_event_t *ev
 
         if (states & NetWmStateFullScreen)
             newState |= Qt::WindowFullScreen;
+            // XXX: Merlijn: maybe handle fullscreen here
         if ((states & NetWmStateMaximizedHorz) && (states & NetWmStateMaximizedVert))
             newState |= Qt::WindowMaximized;
         // Send Window state, compress events in case other flags (modality, etc) are changed.
