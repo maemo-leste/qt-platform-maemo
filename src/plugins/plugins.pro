@@ -1,2 +1,2 @@
 TEMPLATE = subdirs
-SUDIRS = 
+SUBDIRS = platforms
