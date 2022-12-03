@@ -241,6 +241,7 @@ static const char *xcb_atomnames = {
     "_HILDON_WM_WINDOW_PROGRESS_INDICATOR\0"
     "_HILDON_NON_COMPOSITED_WINDOW\0"
     "_HILDON_STACKABLE_WINDOW\0"
+    "_HILDON_LOADING_SCREENSHOT\0"
 
     // \0\0 terminates loop.
 };
