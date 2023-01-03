@@ -1066,7 +1066,7 @@ QXcbGlIntegration *QXcbConnection::glIntegration() const
         return m_glIntegration;
 
     QStringList glIntegrationNames;
-    glIntegrationNames << QStringLiteral("xcb_glx") << QStringLiteral("xcb_egl");
+    glIntegrationNames << QStringLiteral("xcb_maemo_glx") << QStringLiteral("xcb_maemo_egl");
     QString glIntegrationName = QString::fromLocal8Bit(qgetenv("QT_XCB_GL_INTEGRATION"));
     if (!glIntegrationName.isEmpty()) {
         qCDebug(lcQpaGl) << "QT_XCB_GL_INTEGRATION is set to" << glIntegrationName;
