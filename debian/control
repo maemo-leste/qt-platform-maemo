@@ -27,6 +27,7 @@ Build-Depends: debhelper (>= 9),
                libxcb-xfixes0-dev,
                libxcb-xinerama0-dev,
                libxcb-xinput-dev,
+               libxcb-glx0-dev,
 Standards-Version: 3.9.8
 Homepage: https://maemo-leste.github.io
 Vcs-Git: https://github.com/maemo-leste/qt-platform-maemo
