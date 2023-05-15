@@ -434,7 +434,11 @@ QList<int> QXcbIntegration::possibleKeys(const QKeyEvent *e) const
 
 QStringList QXcbIntegration::themeNames() const
 {
-    return QGenericUnixTheme::themeNames();
+    QStringList result = QGenericUnixTheme::themeNames();
+
+    result.prepend("maemo5");
+
+    return result;
 }
 
 QPlatformTheme *QXcbIntegration::createPlatformTheme(const QString &name) const
