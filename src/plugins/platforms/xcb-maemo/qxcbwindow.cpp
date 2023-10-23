@@ -741,6 +741,9 @@ void QXcbWindow::show()
     if (m_trayIconWindow)
         return; // defer showing until XEMBED_EMBEDDED_NOTIFY
 
+    if (m_isMaemoStacked != -1)
+        maemo5SetStackedWindow(m_isMaemoStacked != 0);
+
     xcb_map_window(xcb_connection(), m_window);
 
     if (QGuiApplication::modalWindow() == window())
@@ -1463,7 +1466,7 @@ bool QXcbWindow::windowDynamicPropertyChanged(QObject *obj, QByteArray name) {
 
     // TODO: use QVariant::canConvert(QMetaType::Int), etc
 
-    if (name == QString("X-Maemo-Progress")) {
+    if (name == "X-Maemo-Progress") {
         const QVariant var = obj->property(name);
         bool ok = false;
         int val = var.toInt(&ok);
@@ -1471,7 +1474,7 @@ bool QXcbWindow::windowDynamicPropertyChanged(QObject *obj, QByteArray name) {
             //qCDebug(lcQpaXcb) << "X-Maemo-Progress = " << val;
             maemo5ShowProgressIndicator(val == 1);
         }
-    } else if (name == QString("X-Maemo-NotComposited")) {
+    } else if (name == "X-Maemo-NotComposited") {
         // TODO: We also need fullscreen checks elsewhere
         const QVariant var = obj->property(name);
         bool ok = false;
@@ -1480,15 +1483,14 @@ bool QXcbWindow::windowDynamicPropertyChanged(QObject *obj, QByteArray name) {
             //qCDebug(lcQpaXcb) << "X-Maemo-NotComposited = " << val;
             maemo5SetComposited(val == 1);
         }
-    } else if (name == QString("X-Maemo-StackedWindow")) {
+    } else if (name == "X-Maemo-StackedWindow") {
         const QVariant var = obj->property(name);
-        bool ok = false;
-        int val = var.toInt(&ok);
-        if (ok) {
-            //qCDebug(lcQpaXcb) << "X-Maemo-StackedWindow = " << val;
-            maemo5SetStackedWindow(val);
-        }
-    } else if (name == QString("X-Maemo-Orientation")) {
+        if (!var.isValid())
+            m_isMaemoStacked = -1;
+        else
+            m_isMaemoStacked = var.toInt();
+    }
+    else if (name == "X-Maemo-Orientation") {
         const QVariant var = obj->property(name);
         bool ok = false;
         int val = var.toInt(&ok);
@@ -1604,40 +1606,37 @@ QXcbWindowFunctions::WmWindowTypes QXcbWindow::wmWindowTypes() const
 void QXcbWindow::maemo5SetStackedWindow(bool on)
 {
     long hildon_stackable_window = atom(QXcbAtom::_HILDON_STACKABLE_WINDOW);
+    const QWidgetList topLevelWidgets = QApplication::topLevelWidgets();
+    QWidget *widget = 0;
+
+    /* Find our window widget. Is it ever possible to fail here? */
+    for (QWidget *w : topLevelWidgets) {
+        if (w->winId() == winId()) {
+            widget = w;
+            break;
+        }
+    }
 
     if (on) {
         int position = 0;
+        /* now, get our parent stack posiion, if any */
+        if (widget) {
+            if (QWidget *parent = qobject_cast<QWidget *>(widget->parent())) {
+                auto v = parent->property("X-Maemo-StackedWindowPosition");
 
-        // We need to reconstruct the mapping between top level widgets and
-        // QWindows based on their ->winId()
-        const QWidgetList topLevelWidgets = QApplication::topLevelWidgets();
-        QWindow * pw = m_qwindow;
-
-        while (1) {
-            for (QWidget *widget : topLevelWidgets) {
-                if (pw && widget->isWindow() && widget->winId() == pw->winId()) {
-
-                    if (widget->parent()) {
-                        position++;
-                        QWidget* wid = reinterpret_cast<QWidget*>(widget->parent());
-
-                        pw = wid->windowHandle();
-
-                        const QVariant var = wid->property("X-Maemo-StackedWindow");
-                        bool ok = false;
-                        int val = var.toInt(&ok);
-                        if (ok && (val == 1))
-                            continue;
-                    }
-                }
+                if (v.isValid())
+                    position = v.toInt() + 1;
             }
 
-            break;
+            widget->setProperty("X-Maemo-StackedWindowPosition", position);
         }
 
         //qCDebug(lcQpaXcb) << "Position: " << position;
         xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_stackable_window, XCB_ATOM_INTEGER, 32, 1, &position);
     } else {
+        if (widget)
+            widget->setProperty("X-Maemo-StackedWindowPosition", QVariant());
+
         xcb_delete_property(xcb_connection(), m_window, hildon_stackable_window);
     }
 }

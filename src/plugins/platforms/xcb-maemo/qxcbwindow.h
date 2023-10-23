@@ -193,7 +193,7 @@ public:
     void maemo5SetComposited(bool on);
     void maemo5SetStackedWindow(bool on);
     void maemo5SetSupportedOrientation(int orientation);
-
+    int m_isMaemoStacked = -1;
 public Q_SLOTS:
     void updateSyncRequestCounter();
 
