@@ -1608,6 +1608,7 @@ void QXcbWindow::maemo5SetStackedWindow(bool on)
     long hildon_stackable_window = atom(QXcbAtom::_HILDON_STACKABLE_WINDOW);
     const QWidgetList topLevelWidgets = QApplication::topLevelWidgets();
     QWidget *widget = 0;
+    xcb_window_t transientFor = 0;
 
     /* Find our window widget. Is it ever possible to fail here? */
     for (QWidget *w : topLevelWidgets) {
@@ -1626,17 +1627,29 @@ void QXcbWindow::maemo5SetStackedWindow(bool on)
 
                 if (v.isValid())
                     position = v.toInt() + 1;
+
+                transientFor = parent->winId();
             }
 
             widget->setProperty("X-Maemo-StackedWindowPosition", position);
         }
 
+        if (!transientFor)
+            transientFor = connection()->clientLeader();
+
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, m_window,
+                            XCB_ATOM_WM_TRANSIENT_FOR, XCB_ATOM_WINDOW, 32, 1,
+                            &transientFor);
+
         //qCDebug(lcQpaXcb) << "Position: " << position;
-        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_stackable_window, XCB_ATOM_INTEGER, 32, 1, &position);
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(),
+                            hildon_stackable_window, XCB_ATOM_INTEGER, 32, 1,
+                            &position);
     } else {
         if (widget)
             widget->setProperty("X-Maemo-StackedWindowPosition", QVariant());
 
+        xcb_delete_property(xcb_connection(), m_window, XCB_ATOM_WM_TRANSIENT_FOR);
         xcb_delete_property(xcb_connection(), m_window, hildon_stackable_window);
     }
 }
