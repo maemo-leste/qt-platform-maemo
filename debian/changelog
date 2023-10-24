@@ -1,8 +1,14 @@
+qt-platform-maemo (1:5.0.10-1) unstable; urgency=low
+
+  * Stacked windows must be transient to their parent
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Tue, 24 Oct 2023 05:27:51 +0300
+
 qt-platform-maemo (1:5.0.9-1) unstable; urgency=low
 
   * Fix X-Maemo-StackedWindow handling
 
- -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 15 Oct 2023 15:17:28 +0300
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 23 Oct 2023 15:17:28 +0300
 
 qt-platform-maemo (1:5.0.8-1) unstable; urgency=low
 
