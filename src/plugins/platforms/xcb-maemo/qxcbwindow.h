@@ -197,6 +197,7 @@ public:
     // Maemo additions
     bool windowDynamicPropertyChanged(QObject *obj, QByteArray name);
     void maemo5ShowProgressIndicator(bool on);
+    void maemo5SetMenuIndicator(bool on);
     void maemo5SetComposited(bool on);
     void maemo5SetStackedWindow(bool on);
     void maemo5SetSupportedOrientation(int orientation);
