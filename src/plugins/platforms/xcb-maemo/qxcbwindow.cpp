@@ -80,6 +80,7 @@
 #include <qpa/qwindowsysteminterface.h>
 
 #include <QTextCodec>
+#include <QMainWindow>
 #include <stdio.h>
 
 #if QT_CONFIG(xcb_xlib)
@@ -745,6 +746,25 @@ void QXcbWindow::show()
         maemo5SetStackedWindow(m_isMaemoStacked != 0);
 
     xcb_map_window(xcb_connection(), m_window);
+
+
+    /* See if we have a menubar */
+    const QWidgetList topLevelWidgets = QApplication::topLevelWidgets();
+    QWidget *widget = 0;
+
+    for (QWidget *w : topLevelWidgets) {
+        if (w->winId() == winId()) {
+            widget = w;
+            break;
+        }
+    }
+    if (widget) {
+        if (QMainWindow *mainwindow =  qobject_cast<QMainWindow *>(widget)) {;
+            QMenuBar *have_menubar = mainwindow->menuBar();
+            maemo5SetMenuIndicator(have_menubar);
+        }
+    }
+
 
     if (QGuiApplication::modalWindow() == window())
         requestActivateWindow();
@@ -1709,6 +1729,18 @@ void QXcbWindow::maemo5ShowProgressIndicator(bool on)
         xcb_delete_property(xcb_connection(), m_window, hildon_wm_progress_indicator);
     }
 }
+
+void QXcbWindow::maemo5SetMenuIndicator(bool on)
+{
+    long hildon_wm_menu_indicator = atom(QXcbAtom::_HILDON_WM_WINDOW_MENU_INDICATOR);
+    if (on) {
+        long state = 1;
+        xcb_change_property(xcb_connection(), XCB_PROP_MODE_REPLACE, winId(), hildon_wm_menu_indicator, XCB_ATOM_INTEGER, 32, 1, &state);
+    } else {
+        xcb_delete_property(xcb_connection(), m_window, hildon_wm_menu_indicator);
+    }
+}
+
 
 void QXcbWindow::setWmWindowType(QXcbWindowFunctions::WmWindowTypes types, Qt::WindowFlags flags)
 {
