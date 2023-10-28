@@ -1707,7 +1707,7 @@ void QXcbWindow::maemo5SetComposited(bool off)
     // TODO: And we also want to handle when we are no longer fullscreen... and
     // unset the value if the dynamic property is not set.
 
-    long hildon_non_composited_window = atom(QXcbAtom::_HILDON_WM_WINDOW_PROGRESS_INDICATOR);
+    long hildon_non_composited_window = atom(QXcbAtom::_HILDON_NON_COMPOSITED_WINDOW);
 
     if (off) {
         //qCDebug(lcQpaXcb) << "Compositing OFF" << off;
