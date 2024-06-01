@@ -238,7 +238,7 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
     }
 
     if (m_menu_nest.count() > 0) {
-        m_backAction = new QAction("..." + m_menu_nest.last()->title());
+        m_backAction = new QAction(QIcon::fromTheme("filemanager_folder_up"), "");
         /* We are at least one menu deep. If the count is 1, we want to go back
          * to the main menubar, otherwise we go back to the previous menu.
          * We don't call setMenu if we're going back to the root, we just leave
@@ -276,10 +276,14 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
                     button->setChecked(a->isChecked());
 
                 if (a->menu()) {
-                    button->setText(a->text() + "...");
+                    button->setIcon(QIcon::fromTheme("general_move_to_folder"));
+                    button->setText(a->text());
                 } else {
                     button->setText(a->text());
                 }
+
+                if (!a->icon().isNull())
+                    button->setIcon(a->icon());
 
                 connect(button, SIGNAL(clicked(bool)), this, SLOT(buttonClicked(bool)));
 
