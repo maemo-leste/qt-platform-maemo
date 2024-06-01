@@ -75,6 +75,7 @@ public:
     bool isEmpty() const;
     QAction *selectedAction() const;
 
+
 protected:
 #if 0
     void paintEvent(QPaintEvent *);
@@ -87,7 +88,9 @@ private slots:
     void actionGroupDestroyed(QObject *actionGroup);
 
 private:
-    void recursiveAddActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol);
+    void updateMenuActions();
+    void updateRootMenubar();
+    void buildActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol);
 
     QHBoxLayout *layoutForButton(QAbstractButton *button, QAction *action);
 
@@ -95,6 +98,18 @@ private:
     typedef QMap<QActionGroup *, QPair<QHBoxLayout *, QButtonGroup *> > GroupMap;
     GroupMap m_groups;
     QPointer<QAction> m_selected;
+
+    /* Root menu bar, as passed to us */
+    QWidget * m_menuBar;
+
+    /* Current (nested) menu */
+    QWidget* m_currentMenu;
+
+    /* Our nested menu path */
+    QList<QMenu *> m_menu_nest;
+
+    /* Store this for matching later */
+    QAction *m_backAction = nullptr;
 };
 
 
