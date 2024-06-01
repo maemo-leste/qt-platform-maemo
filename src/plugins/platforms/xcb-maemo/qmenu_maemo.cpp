@@ -388,25 +388,19 @@ void QMaemo5ApplicationMenu::buttonClicked(bool)
         if (m_selected) {
             /* In case we're going back */
             if (m_selected == m_backAction) {
-                if (!m_menu_nest.isEmpty() && (m_selected->menu() == m_menu_nest.last())) {
-                    m_currentMenu = m_menu_nest.last();
+                if (m_menu_nest.count() > 1) {
                     m_menu_nest.removeLast();
+                    m_currentMenu = m_menu_nest.last();
                 } else {
                     m_currentMenu = m_menuBar;
                     m_menu_nest.clear();
                 }
                 updateMenuActions();
                 m_selected = nullptr;
-
             } else if (m_selected->menu()) {
-                if (!m_menu_nest.isEmpty() && (m_selected->menu() == m_menu_nest.last())) {
-                    m_currentMenu = m_menu_nest.last();
-                    m_menu_nest.removeLast();
-                } else {
-                    m_currentMenu = m_selected->menu();
-                    QMenu *menu = qobject_cast<QMenu*>(m_currentMenu);
-                    m_menu_nest.append(menu);
-                }
+                m_currentMenu = m_selected->menu();
+                QMenu *menu = qobject_cast<QMenu*>(m_currentMenu);
+                m_menu_nest.append(menu);
 
                 updateMenuActions();
                 m_selected = nullptr;
