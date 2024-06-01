@@ -114,12 +114,53 @@ void QMenuBarPrivate::maemoResetApplicationMenuAtom(QWidget *w)
 }
 #endif
 
+void clearWidgets(QLayout * layout) {
+    if (! layout)
+        return;
+    while (auto item = layout->takeAt(0)) {
+        delete item->widget();
+        clearWidgets(item->layout());
+    }
+}
+
 QMaemo5ApplicationMenu::QMaemo5ApplicationMenu(QMenuBar *menubar)
     : QDialog(menubar->window())
 {
     // just close the menu in case the orientation changes
     connect(QApplication::desktop(), SIGNAL(resized(int)), this, SLOT(close()));
 
+    m_menuBar = menubar;
+    updateRootMenubar();
+    m_currentMenu = m_menuBar;
+
+    updateMenuActions();
+}
+
+void QMaemo5ApplicationMenu::updateRootMenubar() {
+    /* If we can only find a single menu in the QMenuBar and no actual actions,
+     * then we traverse to the first single menu. */
+    bool found_actions = false;
+    int submenu_count = 0;
+    QWidget *m = nullptr;
+
+    for(QAction *a : m_menuBar->actions()) {
+        qWarning() << "Action:" << a->text() << Qt::endl;
+        if (!a->menu()) {
+            found_actions = true;
+        }
+        if (a->menu()) {
+            submenu_count += 1;
+            m = a->menu();
+        }
+    }
+
+    if (!found_actions && submenu_count == 1) {
+        m_menuBar = m;
+    }
+}
+
+
+void QMaemo5ApplicationMenu::updateMenuActions() {
     int desktop_width = QApplication::desktop()->screenGeometry().width();
     bool portrait = desktop_width < QApplication::desktop()->screenGeometry().height();
     int maxcol = portrait ? 1 : 2;
@@ -142,6 +183,12 @@ QMaemo5ApplicationMenu::QMaemo5ApplicationMenu(QMenuBar *menubar)
 #endif
     int menu_width = desktop_width - (portrait ? 0 : (2 * xoffset));
 
+    m_actions.clear();
+    m_groups.clear();
+
+    clearWidgets(layout());
+    delete layout();
+
     QVBoxLayout *topLayout = new QVBoxLayout(this);
     topLayout->setContentsMargins(content_margin, content_margin, content_margin, content_margin);
 
@@ -153,7 +200,7 @@ QMaemo5ApplicationMenu::QMaemo5ApplicationMenu(QMenuBar *menubar)
 
     // --- add all actions
     int row = 0, col = 0;
-    recursiveAddActions(menubar->actions(), grid, row, col, maxcol);
+    buildActions(m_currentMenu->actions(), grid, row, col, maxcol);
 
     // -- ensure that both columns have the same width
     if (!portrait) {
@@ -175,20 +222,38 @@ QMaemo5ApplicationMenu::QMaemo5ApplicationMenu(QMenuBar *menubar)
         topLayout->addLayout(groupLayout);
     }
     topLayout->addLayout(grid);
+
+    adjustSize();
 }
 
-
-void QMaemo5ApplicationMenu::recursiveAddActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol)
+void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol)
 {
-    for(QAction *a : actions) {
+    QList<QAction *> acts = QList<QAction*>(actions);
+
+    if (m_backAction != nullptr) {
+        delete m_backAction;
+        m_backAction = nullptr;
+    }
+
+    if (m_menu_nest.count() > 0) {
+        m_backAction = new QAction("..");
+        /* We are at least one menu deep. If the count is 1, we want to go back
+         * to the main menubar, otherwise we go back to the previous menu.
+         * We don't call setMenu if we're going back to the root, we just leave
+         * it empty */
+        if (m_menu_nest.count() > 2) {
+            m_backAction->setMenu(m_menu_nest.at(m_menu_nest.count() - 2));
+        }
+
+        acts.prepend(m_backAction);
+    }
+
+    for(QAction *a : acts) {
         if (!a->isVisible() || !a->isEnabled() || a->isSeparator()) {
             // we won't show actions that are hidden or disabled, separators and widget actions
             continue;
-        } else if (a->menu()) {
-            // menu actions will be "flatened" recusively
-            recursiveAddActions(a->menu()->actions(), grid, row, col, maxcol);
-
-        } else {
+        }
+        else {
             QWidget *w = 0;
             QHBoxLayout *layout = 0;
 
@@ -207,7 +272,12 @@ void QMaemo5ApplicationMenu::recursiveAddActions(const QList<QAction *> &actions
                 }
                 if (button->isCheckable())
                     button->setChecked(a->isChecked());
-                button->setText(a->text());
+
+                if (a->menu()) {
+                    button->setText(a->text() + "...");
+                } else {
+                    button->setText(a->text());
+                }
 
                 connect(button, SIGNAL(clicked(bool)), this, SLOT(buttonClicked(bool)));
 
@@ -230,6 +300,8 @@ void QMaemo5ApplicationMenu::recursiveAddActions(const QList<QAction *> &actions
             }
         }
     }
+
+    acts.clear();
 }
 
 /*! \internal
@@ -307,8 +379,31 @@ void QMaemo5ApplicationMenu::buttonClicked(bool)
     QAbstractButton *button = qobject_cast<QAbstractButton *>(sender());
     if (button) {
         m_selected = m_actions.value(button).data();
-        if (m_selected)
-            accept();
+        if (m_selected) {
+            if (m_selected == m_backAction) {
+                m_currentMenu = m_menuBar;
+                m_menu_nest.clear();
+
+                updateMenuActions();
+
+                m_selected = nullptr;
+            } else if (m_selected->menu()) {
+                if (!m_menu_nest.isEmpty() && (m_selected->menu() == m_menu_nest.last())) {
+                    m_currentMenu = m_menu_nest.last();
+                    m_menu_nest.removeLast();
+                } else {
+                    m_currentMenu = m_selected->menu();
+                    QMenu *menu = qobject_cast<QMenu*>(m_currentMenu);
+                    m_menu_nest.append(menu);
+                }
+
+                updateMenuActions();
+
+                m_selected = nullptr;
+            } else {
+                accept();
+            }
+        }
     }
 }
 
