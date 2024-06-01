@@ -120,6 +120,7 @@ void clearWidgets(QLayout * layout) {
     while (auto item = layout->takeAt(0)) {
         delete item->widget();
         clearWidgets(item->layout());
+        delete item;
     }
 }
 
@@ -144,7 +145,6 @@ void QMaemo5ApplicationMenu::updateRootMenubar() {
     QWidget *m = nullptr;
 
     for(QAction *a : m_menuBar->actions()) {
-        qWarning() << "Action:" << a->text() << Qt::endl;
         if (!a->menu()) {
             found_actions = true;
         }
@@ -223,6 +223,8 @@ void QMaemo5ApplicationMenu::updateMenuActions() {
     }
     topLayout->addLayout(grid);
 
+    /* In case our previous menu was larger than the current one, adjust our
+     * size to make sure fit to our current menu */
     adjustSize();
 }
 
@@ -236,7 +238,7 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
     }
 
     if (m_menu_nest.count() > 0) {
-        m_backAction = new QAction("..");
+        m_backAction = new QAction("..." + m_menu_nest.last()->title());
         /* We are at least one menu deep. If the count is 1, we want to go back
          * to the main menubar, otherwise we go back to the previous menu.
          * We don't call setMenu if we're going back to the root, we just leave
@@ -380,13 +382,18 @@ void QMaemo5ApplicationMenu::buttonClicked(bool)
     if (button) {
         m_selected = m_actions.value(button).data();
         if (m_selected) {
+            /* In case we're going back */
             if (m_selected == m_backAction) {
-                m_currentMenu = m_menuBar;
-                m_menu_nest.clear();
-
+                if (!m_menu_nest.isEmpty() && (m_selected->menu() == m_menu_nest.last())) {
+                    m_currentMenu = m_menu_nest.last();
+                    m_menu_nest.removeLast();
+                } else {
+                    m_currentMenu = m_menuBar;
+                    m_menu_nest.clear();
+                }
                 updateMenuActions();
-
                 m_selected = nullptr;
+
             } else if (m_selected->menu()) {
                 if (!m_menu_nest.isEmpty() && (m_selected->menu() == m_menu_nest.last())) {
                     m_currentMenu = m_menu_nest.last();
@@ -398,7 +405,6 @@ void QMaemo5ApplicationMenu::buttonClicked(bool)
                 }
 
                 updateMenuActions();
-
                 m_selected = nullptr;
             } else {
                 accept();
