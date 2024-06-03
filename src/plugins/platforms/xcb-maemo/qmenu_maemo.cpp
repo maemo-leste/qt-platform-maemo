@@ -273,12 +273,10 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
                 if (button->isCheckable())
                     button->setChecked(a->isChecked());
 
-                if (a->menu()) {
-                    button->setIcon(QIcon::fromTheme("general_move_to_folder"));
-                    button->setText(a->text());
-                } else {
-                    button->setText(a->text());
-                }
+                if (a->menu())
+                    button->setIcon(QIcon::fromTheme("general_toolbar_folder"));
+
+                button->setText(a->text());
 
                 if (!a->icon().isNull())
                     button->setIcon(a->icon());
