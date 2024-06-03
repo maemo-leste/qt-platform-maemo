@@ -49,9 +49,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QVarLengthArray>
-#if 0
 #include <QMaemo5Style>
-#endif
 
 //#include "qx11info_x11.h"
 
@@ -171,7 +169,7 @@ void QMaemo5ApplicationMenu::updateMenuActions() {
     int xoffset = 50;
     int group_width = desktop_width - xoffset;
     int group_spacing = 16;
-#if 0
+
     if (qobject_cast<QMaemo5Style *>(style())) {
         horizontal_spacing = style()->pixelMetric(static_cast<QStyle::PixelMetric>(QMaemo5Style::PM_Maemo5AppMenuHorizontalSpacing));
         vertical_spacing   = style()->pixelMetric(static_cast<QStyle::PixelMetric>(QMaemo5Style::PM_Maemo5AppMenuVerticalSpacing));
@@ -180,7 +178,7 @@ void QMaemo5ApplicationMenu::updateMenuActions() {
         group_width        = style()->pixelMetric(static_cast<QStyle::PixelMetric>(QMaemo5Style::PM_Maemo5AppMenuFilterGroupWidth));
         group_spacing      = style()->pixelMetric(static_cast<QStyle::PixelMetric>(QMaemo5Style::PM_Maemo5AppMenuFilterGroupVerticalSpacing));
     }
-#endif
+
     int menu_width = desktop_width - (portrait ? 0 : (2 * xoffset));
 
     m_actions.clear();
