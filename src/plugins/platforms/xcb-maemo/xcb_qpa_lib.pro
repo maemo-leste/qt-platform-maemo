@@ -8,7 +8,7 @@ QT += \
     fontdatabase_support-private \
     edid_support-private \
     xkbcommon_support-private \
-    widgets widgets-private
+    widgets widgets-private maemo5
 
 qtHaveModule(linuxaccessibility_support-private): \
     QT += linuxaccessibility_support-private
