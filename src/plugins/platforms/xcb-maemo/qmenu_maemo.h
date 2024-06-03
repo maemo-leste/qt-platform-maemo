@@ -42,6 +42,7 @@
 #ifndef QMENU_MAEMO5_P_H
 #define QMENU_MAEMO5_P_H
 
+#include <QLayout>
 #include <QtCore/qpair.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qmap.h>
@@ -64,6 +65,36 @@ class QButtonGroup;
 class QHBoxLayout;
 class QAbstractButton;
 
+class GroupLayout
+{
+public:
+    explicit GroupLayout() {
+        vl = new QVBoxLayout();
+        vl->setSpacing(0);
+        vl->setContentsMargins(0, 0, 0, 0);
+
+        hl = new QHBoxLayout();
+        hl->addLayout(vl);
+    }
+    QHBoxLayout *addRow() {
+        QHBoxLayout *row = new QHBoxLayout();
+
+        row->setSpacing(0);
+        row->setContentsMargins(0, 0, 0, 0);
+
+        rows.append(row);
+        vl->addLayout(row);
+
+        return row;
+    }
+    ~GroupLayout() {
+        delete hl;
+    }
+
+    QHBoxLayout *hl;
+    QVBoxLayout *vl;
+    QList<QHBoxLayout *> rows;
+};
 
 class QMaemo5ApplicationMenu : public QDialog
 {
@@ -91,11 +122,10 @@ private:
     void updateMenuActions();
     void updateRootMenubar();
     void buildActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol);
-
-    QHBoxLayout *layoutForButton(QAbstractButton *button, QAction *action);
+    bool addToActionsLayout(QAbstractButton *button, QAction *action);
 
     QMap<QWidget *, QPointer<QAction> > m_actions;
-    typedef QMap<QActionGroup *, QPair<QHBoxLayout *, QButtonGroup *> > GroupMap;
+    typedef QMap<QActionGroup *, QPair<GroupLayout *, QButtonGroup *> > GroupMap;
     GroupMap m_groups;
     QPointer<QAction> m_selected;
 
