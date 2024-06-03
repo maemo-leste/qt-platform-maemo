@@ -3,6 +3,8 @@
 
 #include <QApplication>
 #include <QWidget>
+#include <QMenu>
+#include <QMenuBar>
 
 QT_BEGIN_NAMESPACE
 
@@ -21,7 +23,16 @@ bool QXcbWindowPropertyFilter::eventFilter(QObject *obj, QEvent *event)
             } else {
                 const QWidgetList topLevelWidgets = QApplication::topLevelWidgets();
                 for (QWidget *widget : topLevelWidgets) {
-                    //qCWarning(lcQpaXcb) << "Checking widget: " << widget;
+                    if (QMenu *menu = qobject_cast<QMenu *>(widget)) {
+                        if (menu->parent()) {
+                            if (QMenuBar *menuBar = qobject_cast<QMenuBar *>(widget->parent())) {
+                                if (menuBar->isVisible()) {
+                                    menuBar->setVisible(false);
+                                }
+                            }
+                        }
+                    }
+
                     if (widget->isWindow() && widget->testAttribute(Qt::WA_WState_Created) && widget->winId() == m_qwindow->winId()) {
                         //qCDebug(lcQpaXcb) << "Found widget for window: " << widget;
                         m_widgetfilter = new QXcbWidgetPropertyFilter(widget, this->m_xcbwindow);
