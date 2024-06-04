@@ -112,6 +112,39 @@ void QMenuBarPrivate::maemoResetApplicationMenuAtom(QWidget *w)
 }
 #endif
 
+class GroupLayout
+{
+public:
+    explicit GroupLayout() {
+        vl = new QVBoxLayout();
+        vl->setSpacing(0);
+        vl->setContentsMargins(0, 0, 0, 0);
+
+        hl = new QHBoxLayout();
+        hl->addLayout(vl);
+
+        addRow();
+    }
+    QHBoxLayout *addRow() {
+        QHBoxLayout *row = new QHBoxLayout();
+
+        row->setSpacing(0);
+        row->setContentsMargins(0, 0, 0, 0);
+
+        rows.append(row);
+        vl->addLayout(row);
+
+        return row;
+    }
+    ~GroupLayout() {
+        delete hl;
+    }
+
+    QHBoxLayout *hl;
+    QVBoxLayout *vl;
+    QList<QHBoxLayout *> rows;
+};
+
 void clearWidgets(QLayout * layout) {
     if (! layout)
         return;
@@ -157,7 +190,6 @@ void QMaemo5ApplicationMenu::updateRootMenubar() {
     }
 }
 
-
 void QMaemo5ApplicationMenu::updateMenuActions() {
     int desktop_width = QApplication::desktop()->screenGeometry().width();
     bool portrait = desktop_width < QApplication::desktop()->screenGeometry().height();
@@ -189,6 +221,7 @@ void QMaemo5ApplicationMenu::updateMenuActions() {
 
     QVBoxLayout *topLayout = new QVBoxLayout(this);
     topLayout->setContentsMargins(content_margin, content_margin, content_margin, content_margin);
+    topLayout->setSpacing(0);
 
     QGridLayout *grid = new QGridLayout();
     grid->setHorizontalSpacing(horizontal_spacing);
@@ -198,6 +231,7 @@ void QMaemo5ApplicationMenu::updateMenuActions() {
 
     // --- add all actions
     int row = 0, col = 0;
+
     buildActions(m_currentMenu->actions(), grid, row, col, maxcol);
 
     // -- ensure that both columns have the same width
@@ -210,7 +244,7 @@ void QMaemo5ApplicationMenu::updateMenuActions() {
 
     // --- combine all the layouts
     for (GroupMap::const_iterator it = m_groups.constBegin(); it != m_groups.constEnd(); ++it) {
-        QHBoxLayout *groupLayout = it.value().first;
+        QHBoxLayout *groupLayout = it.value().first->hl;
         groupLayout->setSpacing(0); // the buttons should be next to each other
         groupLayout->setContentsMargins(0, 0, 0, group_spacing);
         groupLayout->insertSpacerItem( 0, new QSpacerItem( (menu_width-2*content_margin-group_width)/2, 0,
@@ -255,7 +289,7 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
         }
         else {
             QWidget *w = 0;
-            QHBoxLayout *layout = 0;
+            bool isActionButton = 0;
 
             if (QWidgetAction *wa = ::qobject_cast<QWidgetAction *>(a)) {
                 w = wa->requestWidget(this);
@@ -283,16 +317,14 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
 
                 connect(button, SIGNAL(clicked(bool)), this, SLOT(buttonClicked(bool)));
 
-                layout = layoutForButton(button, a);
+                isActionButton = addToActionsLayout(button, a);
                 w = button;
             }
 
             connect(a, SIGNAL(changed()), this, SLOT(actionChanged()));
             m_actions.insert(w, a);
 
-            if (layout) { // we got a predetermined layout for this widget
-                layout->addWidget(w);
-            } else { // no special layout. just add it to the grid
+            if (!isActionButton) { // no special layout. just add it to the grid
                 grid->addWidget(w, row, col++);
 
                 if (col >= maxcol) {
@@ -306,24 +338,39 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
     acts.clear();
 }
 
+static bool textOverflows(QHBoxLayout *layout, int colwidth, int textWidth)
+{
+    if (textWidth > colwidth)
+        return true;
+
+    for (int i = 0; i < layout->count(); i++) {
+        auto button = qobject_cast<QAbstractButton *>(layout->itemAt(i)->widget());
+
+        if (button->fontMetrics().horizontalAdvance(button->text()) > colwidth)
+            return true;
+    }
+
+    return false;
+}
+
 /*! \internal
  *  Creates a (or finds an existing) QButtonGroup and QHBoxLayout in the case where the button
  *  should be added to them.
- *  Returns the layout where the button should be added to or 0 if there is no special layout required.
+ *  Returns if button was added to special layout.
  */
-QHBoxLayout *QMaemo5ApplicationMenu::layoutForButton(QAbstractButton *button, QAction *action)
+bool QMaemo5ApplicationMenu::addToActionsLayout(QAbstractButton *button, QAction *action)
 {
     QActionGroup *actionGroup = action->actionGroup();
     if (actionGroup && actionGroup->isExclusive() && action->isCheckable()) {
 
         QButtonGroup *buttonGroup = 0;
-        QHBoxLayout *layout = 0;
+        GroupLayout *layout = 0;
 
         GroupMap::const_iterator it = m_groups.constFind(actionGroup);
         if (it == m_groups.constEnd()) {  // we need to construct a new group
-
             buttonGroup = new QButtonGroup(this);
-            layout = new QHBoxLayout();
+
+            layout = new GroupLayout();
             m_groups.insert(actionGroup, qMakePair(layout, buttonGroup));
             connect(actionGroup, SIGNAL(destroyed(QObject*)), this, SLOT(actionGroupDestroyed(QObject*)));
 
@@ -335,9 +382,22 @@ QHBoxLayout *QMaemo5ApplicationMenu::layoutForButton(QAbstractButton *button, QA
         if (button->group() != buttonGroup)
             buttonGroup->addButton(button);
 
-        return layout;
+        QHBoxLayout *row_layout = layout->rows.last();
+        int textWidth = button->fontMetrics().horizontalAdvance(button->text());
+        int cols = row_layout->count() + 1;
+
+        int maxwidth = maximumWidth() - 32;
+        int maxcolwidth = maxwidth / cols;
+
+        if (cols > 5 || (cols > 1 && textOverflows(row_layout, maxcolwidth, textWidth)))
+            row_layout = layout->addRow();
+
+        row_layout->addWidget(button);
+
+        return true;
     }
-    return 0;
+
+    return false;
 }
 
 bool QMaemo5ApplicationMenu::isEmpty() const
@@ -419,7 +479,7 @@ void QMaemo5ApplicationMenu::actionChanged()
 
 void QMaemo5ApplicationMenu::actionGroupDestroyed(QObject *obj)
 {
-    QPair<QHBoxLayout *, QButtonGroup *> entry = m_groups.take(static_cast<QActionGroup *>(obj));
+    QPair<GroupLayout *, QButtonGroup *> entry = m_groups.take(static_cast<QActionGroup *>(obj));
     delete entry.second;
     delete entry.first;
 }
