@@ -1,3 +1,12 @@
+qt-platform-maemo (1:5.0.13-1) unstable; urgency=low
+
+  * qxcbwindowfilter: hide menuBars as we find them
+  * Fix menu buttons spacing
+  * use general_toolbar_folder for marking that menu contains submenus
+  * Support multiple rows in menu actions
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Tue, 04 Oct 2024 19:23:31 +0300
+
 qt-platform-maemo (1:5.0.12-1) unstable; urgency=low
 
   * Add icons to QMenu's in hildon
