@@ -63,7 +63,7 @@ class QActionGroup;
 class QButtonGroup;
 class QHBoxLayout;
 class QAbstractButton;
-
+class GroupLayout;
 
 class QMaemo5ApplicationMenu : public QDialog
 {
@@ -91,11 +91,10 @@ private:
     void updateMenuActions();
     void updateRootMenubar();
     void buildActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol);
-
-    QHBoxLayout *layoutForButton(QAbstractButton *button, QAction *action);
+    bool addToActionsLayout(QAbstractButton *button, QAction *action);
 
     QMap<QWidget *, QPointer<QAction> > m_actions;
-    typedef QMap<QActionGroup *, QPair<QHBoxLayout *, QButtonGroup *> > GroupMap;
+    typedef QMap<QActionGroup *, QPair<GroupLayout *, QButtonGroup *> > GroupMap;
     GroupMap m_groups;
     QPointer<QAction> m_selected;
 
