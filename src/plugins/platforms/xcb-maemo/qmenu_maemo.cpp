@@ -254,33 +254,11 @@ void QMaemo5ApplicationMenu::updateMenuActions() {
         topLayout->addLayout(groupLayout);
     }
     topLayout->addLayout(grid);
-
-    /* In case our previous menu was larger than the current one, adjust our
-     * size to make sure fit to our current menu */
-    adjustSize();
 }
 
 void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol)
 {
     QList<QAction *> acts = QList<QAction*>(actions);
-
-    if (m_backAction != nullptr) {
-        delete m_backAction;
-        m_backAction = nullptr;
-    }
-
-    if (m_menu_nest.count() > 0) {
-        m_backAction = new QAction(QIcon::fromTheme("filemanager_folder_up"), "");
-        /* We are at least one menu deep. If the count is 1, we want to go back
-         * to the main menubar, otherwise we go back to the previous menu.
-         * We don't call setMenu if we're going back to the root, we just leave
-         * it empty */
-        if (m_menu_nest.count() > 2) {
-            m_backAction->setMenu(m_menu_nest.at(m_menu_nest.count() - 2));
-        }
-
-        acts.prepend(m_backAction);
-    }
 
     for(QAction *a : acts) {
         if (!a->isVisible() || !a->isEnabled() || a->isSeparator()) {
@@ -307,8 +285,11 @@ void QMaemo5ApplicationMenu::buildActions(const QList<QAction *> &actions, QGrid
                 if (button->isCheckable())
                     button->setChecked(a->isChecked());
 
-                if (a->menu())
-                    button->setIcon(QIcon::fromTheme("general_toolbar_folder"));
+                if (a->menu()) {
+                    QFont font(button->font());
+                    font.setUnderline(true);
+                    button->setFont(font);
+                }
 
                 button->setText(a->text());
 
@@ -436,30 +417,54 @@ void QMaemo5ApplicationMenu::showEvent(QShowEvent *se)
             XCB_ATOM_ATOM, 32, 1, (void*)&appmenutype);
 }
 
+void QMaemo5ApplicationMenu::updateMenu()
+{
+
+    setUpdatesEnabled(false);
+
+    updateMenuActions();
+
+    /* In case our previous menu was larger than the current one, adjust our
+     * size to make sure fit to our current menu. We have to process all events
+     * before doing so otherwise our window is recreated sometimes, instead of
+     * just being resized */
+    QCoreApplication::processEvents();
+    adjustSize();
+
+    setUpdatesEnabled(true);
+
+    m_selected = nullptr;
+}
+
+void QMaemo5ApplicationMenu::reject()
+{
+    if (m_menu_nest.count()) {
+        m_menu_nest.removeLast();
+
+        if (m_menu_nest.count())
+            m_currentMenu = m_menu_nest.last();
+        else
+            m_currentMenu = m_menuBar;
+
+        updateMenu();
+    } else {
+        QDialog::reject();
+    }
+}
+
 void QMaemo5ApplicationMenu::buttonClicked(bool)
 {
     QAbstractButton *button = qobject_cast<QAbstractButton *>(sender());
+
     if (button) {
         m_selected = m_actions.value(button).data();
         if (m_selected) {
             /* In case we're going back */
-            if (m_selected == m_backAction) {
-                if (m_menu_nest.count() > 1) {
-                    m_menu_nest.removeLast();
-                    m_currentMenu = m_menu_nest.last();
-                } else {
-                    m_currentMenu = m_menuBar;
-                    m_menu_nest.clear();
-                }
-                updateMenuActions();
-                m_selected = nullptr;
-            } else if (m_selected->menu()) {
+            if (m_selected->menu()) {
                 m_currentMenu = m_selected->menu();
                 QMenu *menu = qobject_cast<QMenu*>(m_currentMenu);
                 m_menu_nest.append(menu);
-
-                updateMenuActions();
-                m_selected = nullptr;
+                updateMenu();
             } else {
                 accept();
             }

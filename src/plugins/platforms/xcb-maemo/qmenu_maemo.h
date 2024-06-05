@@ -81,6 +81,7 @@ protected:
     void paintEvent(QPaintEvent *);
 #endif
     void showEvent(QShowEvent *);
+    void reject();
 
 private slots:
     void buttonClicked(bool);
@@ -92,7 +93,7 @@ private:
     void updateRootMenubar();
     void buildActions(const QList<QAction *> &actions, QGridLayout *grid, int &row, int &col, int maxcol);
     bool addToActionsLayout(QAbstractButton *button, QAction *action);
-
+    void updateMenu();
     QMap<QWidget *, QPointer<QAction> > m_actions;
     typedef QMap<QActionGroup *, QPair<GroupLayout *, QButtonGroup *> > GroupMap;
     GroupMap m_groups;
@@ -106,9 +107,6 @@ private:
 
     /* Our nested menu path */
     QList<QMenu *> m_menu_nest;
-
-    /* Store this for matching later */
-    QAction *m_backAction = nullptr;
 };
 
 
