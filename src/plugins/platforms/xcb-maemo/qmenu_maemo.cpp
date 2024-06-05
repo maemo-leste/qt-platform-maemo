@@ -116,22 +116,32 @@ class GroupLayout
 {
 public:
     explicit GroupLayout() {
-        vl = new QVBoxLayout();
-        vl->setSpacing(0);
-        vl->setContentsMargins(0, 0, 0, 0);
-
+        vl = 0;
         hl = new QHBoxLayout();
-        hl->addLayout(vl);
-
-        addRow();
     }
     QHBoxLayout *addRow() {
+        if (!vl) {
+            hl->setSpacing(0);
+            hl->setContentsMargins(0, 0, 0, 0);
+
+            rows.append(hl);
+
+            vl = new QVBoxLayout();
+            vl->setSpacing(0);
+            vl->setContentsMargins(0, 0, 0, 0);
+            vl->addLayout(hl);
+
+            hl = new QHBoxLayout();
+            hl->addLayout(vl);
+        }
+
         QHBoxLayout *row = new QHBoxLayout();
 
         row->setSpacing(0);
         row->setContentsMargins(0, 0, 0, 0);
 
         rows.append(row);
+
         vl->addLayout(row);
 
         return row;
@@ -140,7 +150,16 @@ public:
         delete hl;
     }
 
+    QHBoxLayout *lastRow() {
+        if (rows.count())
+            return rows.last();
+
+        return hl;
+    }
+
     QHBoxLayout *hl;
+
+protected:
     QVBoxLayout *vl;
     QList<QHBoxLayout *> rows;
 };
@@ -363,7 +382,7 @@ bool QMaemo5ApplicationMenu::addToActionsLayout(QAbstractButton *button, QAction
         if (button->group() != buttonGroup)
             buttonGroup->addButton(button);
 
-        QHBoxLayout *row_layout = layout->rows.last();
+        QHBoxLayout *row_layout = layout->lastRow();
         int textWidth = button->fontMetrics().horizontalAdvance(button->text());
         int cols = row_layout->count() + 1;
 
