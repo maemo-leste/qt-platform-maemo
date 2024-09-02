@@ -41,6 +41,7 @@
 #include "qxcbkeyboard.h"
 #include "qxcbscreen.h"
 #include "qxcbwindow.h"
+#include "qmaemotapandhold.h"
 #include "qtouchdevice.h"
 #include "QtCore/qmetaobject.h"
 #include <qpa/qwindowsysteminterface_p.h>
@@ -780,6 +781,16 @@ void QXcbConnection::xi2ProcessTouch(void *xiDevEvent, QXcbWindow *platformWindo
             " area " << touchPoint.area << " pressure " << touchPoint.pressure;
     Qt::KeyboardModifiers modifiers = keyboard()->translateModifiers(xiDeviceEvent->mods.effective);
     QWindowSystemInterface::handleTouchEvent(platformWindow->window(), xiDeviceEvent->time, dev->qtTouchDevice, dev->touchPoints.values(), modifiers);
+#ifndef QT_NO_CONTEXTMENU
+    if (touchPoint.state == Qt::TouchPointPressed) {
+        if (firstTouch && platformWindow)
+            QMaemoTapAndHold::instance()->start(platformWindow->window(), modifiers);
+        else
+            QMaemoTapAndHold::instance()->stop();
+    } else if(touchPoint.state == Qt::TouchPointReleased) {
+            QMaemoTapAndHold::instance()->stop();
+    }
+#endif
     if (touchPoint.state == Qt::TouchPointReleased)
         // If a touchpoint was released, we can forget it, because the ID won't be reused.
         dev->touchPoints.remove(touchPoint.id);
