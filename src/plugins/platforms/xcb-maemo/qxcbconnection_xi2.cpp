@@ -591,8 +591,8 @@ void QXcbConnection::xi2HandleEvent(xcb_ge_event_t *event)
                         event->event_type, xiDeviceEvent->sequence, xiDeviceEvent->detail,
                         fixed1616ToReal(xiDeviceEvent->event_x), fixed1616ToReal(xiDeviceEvent->event_y),
                         fixed1616ToReal(xiDeviceEvent->root_x), fixed1616ToReal(xiDeviceEvent->root_y),xiDeviceEvent->event);
-            if (QXcbWindow *platformWindow = platformWindowFromId(xiDeviceEvent->event))
-                xi2ProcessTouch(xiDeviceEvent, platformWindow);
+            QXcbWindow *platformWindow = platformWindowFromId(xiDeviceEvent->event);
+            xi2ProcessTouch(xiDeviceEvent, platformWindow);
             break;
         }
     } else if (xiEnterEvent && !xi2MouseEventsDisabled() && eventListener) {
@@ -633,7 +633,7 @@ void QXcbConnection::xi2ProcessTouch(void *xiDevEvent, QXcbWindow *platformWindo
         dev->touchPoints[tp.id] = tp;
     }
     QWindowSystemInterface::TouchPoint &touchPoint = dev->touchPoints[xiDeviceEvent->detail];
-    QXcbScreen* screen = platformWindow->xcbScreen();
+    QXcbScreen* screen = platformWindow ? platformWindow->xcbScreen() : nullptr;
     qreal x = fixed1616ToReal(xiDeviceEvent->root_x);
     qreal y = fixed1616ToReal(xiDeviceEvent->root_y);
     qreal nx = -1.0, ny = -1.0;
@@ -663,11 +663,11 @@ void QXcbConnection::xi2ProcessTouch(void *xiDevEvent, QXcbWindow *platformWindo
             nx = valuatorNormalized;
         } else if (vci.label == QXcbAtom::AbsMTPositionY) {
             ny = valuatorNormalized;
-        } else if (vci.label == QXcbAtom::AbsMTTouchMajor) {
+        } else if (vci.label == QXcbAtom::AbsMTTouchMajor && screen) {
             const qreal sw = screen->geometry().width();
             const qreal sh = screen->geometry().height();
             w = valuatorNormalized * std::sqrt(sw * sw + sh * sh);
-        } else if (vci.label == QXcbAtom::AbsMTTouchMinor) {
+        } else if (vci.label == QXcbAtom::AbsMTTouchMinor && screen) {
             const qreal sw = screen->geometry().width();
             const qreal sh = screen->geometry().height();
             h = valuatorNormalized * std::sqrt(sw * sw + sh * sh);
@@ -690,11 +690,13 @@ void QXcbConnection::xi2ProcessTouch(void *xiDevEvent, QXcbWindow *platformWindo
     // If any value was not updated, use the last-known value.
     if (nx == -1.0) {
         x = touchPoint.area.center().x();
-        nx = x / screen->geometry().width();
+        if (screen)
+            nx = x / screen->geometry().width();
     }
     if (ny == -1.0) {
         y = touchPoint.area.center().y();
-        ny = y / screen->geometry().height();
+        if (screen)
+            ny = y / screen->geometry().height();
     }
     if (xiDeviceEvent->event_type != XCB_INPUT_TOUCH_END) {
         if (!dev->providesTouchOrientation) {
@@ -728,7 +730,7 @@ void QXcbConnection::xi2ProcessTouch(void *xiDevEvent, QXcbWindow *platformWindo
         }
         break;
     case XCB_INPUT_TOUCH_UPDATE:
-        if (dev->qtTouchDevice->type() == QTouchDevice::TouchPad && dev->pointPressedPosition.value(touchPoint.id) == QPointF(x, y)) {
+        if (dev->qtTouchDevice->type() == QTouchDevice::TouchPad && dev->pointPressedPosition.value(touchPoint.id) == QPointF(x, y) && screen) {
             qreal dx = (nx - dev->firstPressedNormalPosition.x()) *
                 dev->size.width() * screen->geometry().width() / screen->physicalSize().width();
             qreal dy = (ny - dev->firstPressedNormalPosition.y()) *
@@ -758,7 +760,7 @@ void QXcbConnection::xi2ProcessTouch(void *xiDevEvent, QXcbWindow *platformWindo
         break;
     case XCB_INPUT_TOUCH_END:
         touchPoint.state = Qt::TouchPointReleased;
-        if (dev->qtTouchDevice->type() == QTouchDevice::TouchPad && dev->pointPressedPosition.value(touchPoint.id) == QPointF(x, y)) {
+        if (dev->qtTouchDevice->type() == QTouchDevice::TouchPad && dev->pointPressedPosition.value(touchPoint.id) == QPointF(x, y) && screen) {
             qreal dx = (nx - dev->firstPressedNormalPosition.x()) *
                 dev->size.width() * screen->geometry().width() / screen->physicalSize().width();
             qreal dy = (ny - dev->firstPressedNormalPosition.y()) *
@@ -775,7 +777,7 @@ void QXcbConnection::xi2ProcessTouch(void *xiDevEvent, QXcbWindow *platformWindo
         qCDebug(lcQpaXInputEvents) << "   touchpoint "  << touchPoint.id << " state " << touchPoint.state << " pos norm " << touchPoint.normalPosition <<
             " area " << touchPoint.area << " pressure " << touchPoint.pressure;
     Qt::KeyboardModifiers modifiers = keyboard()->translateModifiers(xiDeviceEvent->mods.effective);
-    QWindowSystemInterface::handleTouchEvent(platformWindow->window(), xiDeviceEvent->time, dev->qtTouchDevice, dev->touchPoints.values(), modifiers);
+    QWindowSystemInterface::handleTouchEvent(platformWindow ? platformWindow->window() : nullptr, xiDeviceEvent->time, dev->qtTouchDevice, dev->touchPoints.values(), modifiers);
     if (touchPoint.state == Qt::TouchPointReleased)
         // If a touchpoint was released, we can forget it, because the ID won't be reused.
         dev->touchPoints.remove(touchPoint.id);
