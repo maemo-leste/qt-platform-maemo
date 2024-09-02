@@ -60,6 +60,7 @@
 #include "qxcbsystemtraytracker.h"
 
 #include "qmenu_maemo.h"
+#include "qmaemotapandhold.h"
 #include "qxcbwindowfilter.h"
 #include <QtWidgets/qapplication.h>
 
@@ -2419,6 +2420,14 @@ void QXcbWindow::handleMouseEvent(xcb_timestamp_t time, const QPoint &local, con
     m_lastPointerPosition = local;
     connection()->setTime(time);
     Qt::MouseButton button = type == QEvent::MouseMove ? Qt::NoButton : connection()->button();
+#ifndef QT_NO_CONTEXTMENU
+    if (button == Qt::LeftButton) {
+        if (type == QEvent::MouseButtonPress)
+            QMaemoTapAndHold::instance()->start(window(), modifiers);
+        else if (type == QEvent::MouseButtonRelease)
+            QMaemoTapAndHold::instance()->stop();
+    }
+#endif
     QWindowSystemInterface::handleMouseEvent(window(), time, local, global,
                                              connection()->buttonState(), button,
                                              type, modifiers, source);

@@ -40,7 +40,8 @@ SOURCES = \
         qxcbconnection_screens.cpp \
         qxcbconnection_xi2.cpp \
         qxcbatom.cpp \
-        qmenu_maemo.cpp
+        qmenu_maemo.cpp \
+        qmaemotapandhold.cpp
 
 HEADERS = \
         qxcbclipboard.h \
@@ -64,7 +65,8 @@ HEADERS = \
         qxcbeventdispatcher.h \
         qxcbconnection_basic.h \
         qxcbatom.h \
-        qmenu_maemo.h
+        qmenu_maemo.h \
+        qmaemotapandhold.h
 
 qtConfig(draganddrop) {
     SOURCES += qxcbdrag.cpp
