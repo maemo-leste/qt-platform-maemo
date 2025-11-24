@@ -1,3 +1,109 @@
+qt-platform-maemo (1:5.15.15-1) unstable; urgency=low
+
+  * 5.15.15 version of Maemo platform module
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 24 Nov 2025 14:01:41 +0100
+
+qt-platform-maemo (1:5.0.15-1) unstable; urgency=low
+
+  * implement tap-and-hold context menu support
+  * backport https://codereview.qt-project.org/c/qt/qtbase/+/410369
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 02 Sep 2024 21:00:45 +0300
+
+qt-platform-maemo (1:5.0.14-1) unstable; urgency=low
+
+  * qmenu: drop icons usage
+  * qmenu: do not create extra layouts for actions if there is only one row
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Wed, 05 Jun 2024 09:07:31 +0300
+
+qt-platform-maemo (1:5.0.13-1) unstable; urgency=low
+
+  * qxcbwindowfilter: hide menuBars as we find them
+  * Fix menu buttons spacing
+  * use general_toolbar_folder for marking that menu contains submenus
+  * Support multiple rows in menu actions
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Tue, 04 Jun 2024 19:23:31 +0300
+
+qt-platform-maemo (1:5.0.12-1) unstable; urgency=low
+
+  * Add icons to QMenu's in hildon
+  * Render submenus as actual nested menus rather than a single flat menu
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sun, 02 Jun 2024 01:34:58 +0200
+
+qt-platform-maemo (1:5.0.11-1) unstable; urgency=low
+
+  * Render menu arrow like in qt4 on Fremantle
+  * Fix disable compositing
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Thu, 02 Nov 2023 10:49:11 +0100
+
+qt-platform-maemo (1:5.0.10-1) unstable; urgency=low
+
+  * Stacked windows must be transient to their parent
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Tue, 24 Oct 2023 05:27:51 +0300
+
+qt-platform-maemo (1:5.0.9-1) unstable; urgency=low
+
+  * Fix X-Maemo-StackedWindow handling
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 23 Oct 2023 15:17:28 +0300
+
+qt-platform-maemo (1:5.0.8-1) unstable; urgency=low
+
+  * try maemo5 platform theme
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Mon, 15 May 2023 11:24:14 +0300
+
+qt-platform-maemo (1:5.0.7-1) unstable; urgency=low
+
+  * Enable gl_integrations plugins
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Tue, 03 Jan 2023 10:27:22 +0100
+
+qt-platform-maemo (1:5.0.6-1) unstable; urgency=low
+
+  * Set correct qmake module version (5.15.2)
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sat, 03 Dec 2022 16:21:53 +0100
+
+qt-platform-maemo (1:5.0.5-1) unstable; urgency=low
+
+  * Chimaera rebase
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sat, 03 Dec 2022 14:47:58 +0100
+
+qt-platform-maemo (1:5.0.4-1) unstable; urgency=low
+
+  * Add orientation support
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Tue, 22 Sep 2020 22:50:29 +0200
+
+qt-platform-maemo (1:5.0.3-1) unstable; urgency=low
+
+  * Remove spec file, now provided by libqt5maemo5-dev
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Sat, 12 Sep 2020 19:31:23 +0200
+
+qt-platform-maemo (1:5.0.2-1) unstable; urgency=low
+
+  * Add spec file
+  * This is not a finished product!
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Wed, 02 Sep 2020 19:42:38 +0200
+
+qt-platform-maemo (1:5.0.1-1) unstable; urgency=low
+
+  * Add some hildon features like stackable windows, qmenu, progress indicator
+  * Make dialogs render properly
+  * This is not a finished product!
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Thu, 09 Apr 2020 10:34:57 +0200
+
 qt-platform-maemo (1:5.0.0-1) unstable; urgency=low
 
   * Initial package
