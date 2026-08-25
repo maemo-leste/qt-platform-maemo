@@ -1,0 +1,114 @@
+From 81a12fa3ee2e8fae29db0ad62272c5a0e654a7a8 Mon Sep 17 00:00:00 2001
+From: Liang Qi <liang.qi@qt.io>
+Date: Wed, 26 May 2021 11:23:29 +0200
+Subject: [PATCH] xcb: fix QWindow::startSystemMove()/Resize() triggered by
+ touch
+
+Abort the system move/resise at XCB_INPUT_TOUCH_END.
+
+Limit the behavior only on supported platforms, such as KDE and
+OpenBox.
+
+Change-Id: I53c86979ca56f4de8c5cf2807f781abdad6987b2
+Reviewed-by: Shawn Rutledge <shawn.rutledge@qt.io>
+(cherry picked from commit 50a4b97d3160d45a5dcadc68d08f04b2e9efa16d)
+(cherry picked from commit 3e81c512b8ae55ae325d166790b136d78aa6c983)
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+---
+ src/plugins/platforms/xcb-maemo/qxcbconnection.cpp     | 11 +++++++++--
+ src/plugins/platforms/xcb-maemo/qxcbconnection.h       |  4 +---
+ src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp |  5 +++++
+ src/plugins/platforms/xcb-maemo/qxcbwindow.cpp         |  6 ++++--
+ 4 files changed, 19 insertions(+), 7 deletions(-)
+
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbconnection.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection.cpp
+@@ -100,8 +100,6 @@ QXcbConnection::QXcbConnection(QXcbNativ
+ 
+     m_eventQueue = new QXcbEventQueue(this);
+ 
+-    m_xdgCurrentDesktop = qgetenv("XDG_CURRENT_DESKTOP").toLower();
+-
+     if (hasXRandr())
+         xrandrSelectEvents();
+ 
+@@ -801,6 +799,15 @@ void QXcbConnection::ungrabServer()
+         xcb_ungrab_server(xcb_connection());
+ }
+ 
++QString QXcbConnection::windowManagerName() const
++{
++    QXcbVirtualDesktop *pvd = primaryVirtualDesktop();
++    if (pvd)
++        return pvd->windowManagerName().toLower();
++
++    return QString();
++}
++
+ xcb_timestamp_t QXcbConnection::getTimestamp()
+ {
+     // send a dummy event to myself to get the timestamp from X server.
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection.h
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbconnection.h
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection.h
+@@ -211,8 +211,7 @@ public:
+     void grabServer();
+     void ungrabServer();
+ 
+-    bool isUnity() const { return m_xdgCurrentDesktop == "unity"; }
+-    bool isGnome() const { return m_xdgCurrentDesktop == "gnome"; }
++    QString windowManagerName() const;
+ 
+     QXcbNativeInterface *nativeInterface() const { return m_nativeInterface; }
+ 
+@@ -385,7 +384,6 @@ private:
+ 
+     friend class QXcbEventQueue;
+ 
+-    QByteArray m_xdgCurrentDesktop;
+     QTimer m_focusInTimer;
+ 
+ };
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp
+@@ -534,6 +534,9 @@ void QXcbConnection::xi2HandleEvent(xcb_
+         if (xiEvent->event_type == XCB_INPUT_BUTTON_RELEASE
+             && xiEvent->detail == XCB_BUTTON_INDEX_1 ) {
+             abortSystemMoveResize(xiEvent->event);
++        } else if (xiEvent->event_type == XCB_INPUT_TOUCH_END) {
++            abortSystemMoveResize(xiEvent->event);
++            return;
+         } else {
+             return;
+         }
+@@ -838,6 +841,8 @@ bool QXcbConnection::startSystemMoveResi
+                     m_startSystemMoveResizeInfo.deviceid = devIt.key();
+                     m_startSystemMoveResizeInfo.pointid = pointIt.key();
+                     m_startSystemMoveResizeInfo.edges = edges;
++                    setDuringSystemMoveResize(true);
++                    qCDebug(lcQpaXInputDevices) << "triggered system move or resize from touch";
+                     return true;
+                 }
+             }
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+@@ -2689,8 +2689,10 @@ bool QXcbWindow::startSystemMoveResize(c
+     // ### FIXME QTBUG-53389
+     bool startedByTouch = connection()->startSystemMoveResizeForTouch(m_window, edges);
+     if (startedByTouch) {
+-        if (connection()->isUnity()) {
+-            // Unity fails to move/resize via _NET_WM_MOVERESIZE (WM bug?).
++        const QString wmname = connection()->windowManagerName();
++        if (wmname != QLatin1String("kwin") && wmname != QLatin1String("openbox")) {
++            qCDebug(lcQpaXInputDevices) << "only KDE and OpenBox support startSystemMove/Resize which is triggered from touch events: XDG_CURRENT_DESKTOP="
++                                        << qgetenv("XDG_CURRENT_DESKTOP");
+             connection()->abortSystemMoveResize(m_window);
+             return false;
+         }

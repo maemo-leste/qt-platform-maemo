@@ -1,0 +1,93 @@
+From bea85a6774b2d086a241b2008bf784aa1bf495c1 Mon Sep 17 00:00:00 2001
+From: Liang Qi <liang.qi@qt.io>
+Date: Wed, 29 May 2024 14:24:02 +0200
+Subject: [PATCH] xcb: Correctly report whether
+ QInternalMimeData::retrieveData_sys() fails
+
+QMimeData::retrieveData() checks whether the returned QVariant value is
+valid, i.e. the variant contains some data. If the variant contains an
+empty QByteArray, it will be considered valid.
+
+So retrieveData_sys() should return QVariant() in case data with the
+specified mime type cannot be retrieved.
+
+5.15 branch doesn't support std::optional, which is a c++17 feature.
+Then modified to get the function work.
+
+Fixes: QTBUG-125531
+Change-Id: I0a668ca7ad5b2c5430335e8554cc597747287173
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+(cherry picked from commit 59b7e143a98c1a91587f8cc87e92c0bc0650f55d)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit 7f219f23b4c6d9ae4a80406cfb709453175f4667)
+(cherry picked from commit 3a60c501ecce71b6879cd465b68dcf58df51ba54)
+(cherry modified from commit a59a25f6af8caa7f3ea5dfea8c47cc5a622cdbd9)
+Reviewed-by: Axel Spoerl <axel.spoerl@qt.io>
+---
+ src/plugins/platforms/xcb-maemo/qxcbclipboard.cpp |  8 ++++++--
+ src/plugins/platforms/xcb-maemo/qxcbdrag.cpp      | 13 ++++++++-----
+ 2 files changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbclipboard.cpp b/src/plugins/platforms/xcb-maemo/qxcbclipboard.cpp
+index 8852defde628..892f6b74537e 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbclipboard.cpp
++++ b/src/plugins/platforms/xcb-maemo/qxcbclipboard.cpp
+@@ -127,7 +127,7 @@ class QXcbClipboardMime : public QXcbMime
+     {
+         auto requestedType = QMetaType::Type(type);
+         if (fmt.isEmpty() || isEmpty())
+-            return QByteArray();
++            return QVariant();
+ 
+         (void)formats(); // trigger update of format list
+ 
+@@ -144,7 +144,11 @@ class QXcbClipboardMime : public QXcbMime
+         if (fmtatom == 0)
+             return QVariant();
+ 
+-        return mimeConvertToFormat(m_clipboard->connection(), fmtatom, m_clipboard->getDataInFormat(modeAtom, fmtatom), fmt, requestedType, encoding);
++        const QByteArray result = m_clipboard->getDataInFormat(modeAtom, fmtatom);
++        if (result.isNull())
++            return QVariant();
++
++        return mimeConvertToFormat(m_clipboard->connection(), fmtatom, result, fmt, requestedType, encoding);
+     }
+ private:
+ 
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp b/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
+index 7e05097cda9f..a2869b6c23cd 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
++++ b/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
+@@ -1374,24 +1374,27 @@ QVariant QXcbDropData::xdndObtainData(const QByteArray &format, QMetaType::Type
+         QMimeData *data = drag->currentDrag()->mimeData();
+         if (data->hasFormat(QLatin1String(format)))
+             result = data->data(QLatin1String(format));
+-        return result;
++        return result.isNull() ? QVariant() : result;
+     }
+ 
+     QVector<xcb_atom_t> atoms = drag->xdnd_types;
+     QByteArray encoding;
+     xcb_atom_t a = mimeAtomForFormat(c, QLatin1String(format), requestedType, atoms, &encoding);
+     if (a == XCB_NONE)
+-        return result;
++        return QVariant();
+ 
+ #ifndef QT_NO_CLIPBOARD
+     if (c->clipboard()->getSelectionOwner(drag->atom(QXcbAtom::XdndSelection)) == XCB_NONE)
+-        return result; // should never happen?
++        return QVariant(); // should never happen?
+ 
+     xcb_atom_t xdnd_selection = c->atom(QXcbAtom::XdndSelection);
+     result = c->clipboard()->getSelection(xdnd_selection, a, xdnd_selection, drag->targetTime());
+-#endif
+-
++    if (result.isNull())
++        return QVariant();
+     return mimeConvertToFormat(c, a, result, QLatin1String(format), requestedType, encoding);
++#else
++    return QVariant();
++#endif
+ }
+ 
+ bool QXcbDropData::hasFormat_sys(const QString &format) const

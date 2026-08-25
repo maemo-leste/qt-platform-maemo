@@ -1,0 +1,70 @@
+From 4f3e13dfc32ac9a9afeff04d783e70e375c94ae5 Mon Sep 17 00:00:00 2001
+From: Marc Mutz <marc.mutz@qt.io>
+Date: Wed, 26 Mar 2025 15:03:43 +0100
+Subject: [PATCH] QXcbDrag: Fix UB (unaligned load) in handleFinished()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+According to the XDND spec¹, the window-ID of an XcbFinished message
+is in xclient.l[0]. That's Xlib terms, though. In xcb terms, it's in
+xcb_client_message_event_t's data.data32[0]. This is how all QXcbDrag
+functions handle it (e.g. move()), except handleFinished(), which
+casts the uint32_t array to a (misaligned) ulong one.
+
+¹ https://www.freedesktop.org/wiki/Specifications/XDND/#index29h3
+  (the fragment doesn't look like it's stable, it's the section
+  titled "XdndFinished (new in version 2)")
+
+Says UBSan:
+
+  qxcbdrag.cpp:1051:12: runtime error: load of misaligned address 0x60400078ba9c for type 'const long unsigned int', which requires 8 byte alignment
+  0x60400078ba9c: note: pointer points here
+    c0 01 00 00 28 02 e0 08  01 00 00 00 c8 01 00 00  00 00 00 00 00 00 00 00  93 23 00 00 00 00 00 00
+                ^
+    #0 0x7fa3ea3a957c in QXcbDrag::handleFinished(xcb_client_message_event_t const*) qxcbdrag.cpp:1051
+    #1 0x7fa3e9e20dec in QXcbConnection::handleXcbEvent(xcb_generic_event_t*) qxcbconnection.cpp:607
+    [...]
+
+I have a hard time seeing how it could have worked in big-endian
+systems. In LE ones, it only works because the high bits of l[0],
+which come from data32[1], are stripped again when the value is
+narrowed for passing to findTransactionByWindow(). But the 'if' before
+_could_ mis-detect a zero xcb_window_t for a non-zero one if data32[1]
+wasn't empty...
+
+To summarize: this is a mess (that's a technical term).
+
+Fix by removing the pointless cast, and just read data32[0], like
+elsewhere in the file.
+
+Amends c3f9de62966d32d8e33d62eb374fe2657a4cfebe(!).
+
+Fixes: QTBUG-127517
+Change-Id: Ie7c3718bada52ff82c16f814eee8ec57248fbfbf
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+(cherry picked from commit 6ac40faa80ed2faf92ec95759baf2fde7697c207)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit d05f5a503c9be6ee1ddd2523117b150a9eef1020)
+(cherry picked from commit c95cb1e42bb9d9c6dd2cb26fad82b4001adee5e1)
+(cherry picked from commit c77d7e711405e63914c769d7ddb44b8e47642f69)
+---
+ src/plugins/platforms/xcb-maemo/qxcbdrag.cpp | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp b/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
+index a2869b6c23cd..c6835658ac6e 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
++++ b/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
+@@ -1110,9 +1110,8 @@ void QXcbDrag::handleFinished(const xcb_client_message_event_t *event)
+         return;
+ #endif
+ 
+-    const unsigned long *l = (const unsigned long *)event->data.data32;
+-    if (l[0]) {
+-        int at = findTransactionByWindow(l[0]);
++    if (xcb_window_t w = event->data.data32[0]) {
++        int at = findTransactionByWindow(w);
+         if (at != -1) {
+ 
+             Transaction t = transactions.takeAt(at);

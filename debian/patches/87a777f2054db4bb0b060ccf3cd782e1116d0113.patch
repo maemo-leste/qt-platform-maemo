@@ -1,0 +1,44 @@
+From 87a777f2054db4bb0b060ccf3cd782e1116d0113 Mon Sep 17 00:00:00 2001
+From: Liang Qi <liang.qi@qt.io>
+Date: Thu, 21 Mar 2024 12:34:06 +0100
+Subject: [PATCH] xcb: try to repopulate xinput2 devices when needed
+
+And try to not call Q_ASSERT() to avoid crash.
+
+Fixes: QTBUG-123554
+Change-Id: I9443c5f0ab4ca7a858df9b328f517b48ab8f122d
+Reviewed-by: Axel Spoerl <axel.spoerl@qt.io>
+Reviewed-by: Allan Sandfeld Jensen <allan.jensen@qt.io>
+(cherry picked from commit 2862cdb7ba22cc99d1db158888ba0bb32c47e8e8)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit ed96f3bd2f76c7c6b86ffeaaf0083cdec53fff18)
+(cherry picked from commit 6c16bf0c60626783a7043f08630f7ae48cee9cc3)
+(cherry picked from commit dcae60f1e5fb87f2d24f0b3fee18c2e3b8212919)
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+(cherry picked from commit ca6af3cf7e5e534ade12ecf389200a3813245953)
+---
+ src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbconnection_xi2.cpp
+@@ -628,7 +628,16 @@ void QXcbConnection::xi2ProcessTouch(voi
+ {
+     auto *xiDeviceEvent = reinterpret_cast<xcb_input_touch_begin_event_t *>(xiDevEvent);
+     TouchDeviceData *dev = touchDeviceForId(xiDeviceEvent->sourceid);
+-    Q_ASSERT(dev);
++    if (!dev) {
++        qCDebug(lcQpaXInputEvents) << "didn't find the dev for given sourceid - " << xiDeviceEvent->sourceid
++            << ", try to repopulate xi2 devices";
++        xi2SetupDevices();
++        dev = touchDeviceForId(xiDeviceEvent->sourceid);
++        if (!dev) {
++            qCDebug(lcQpaXInputEvents) << "still can't find the dev for it, give up.";
++            return;
++        }
++    }
+     const bool firstTouch = dev->touchPoints.isEmpty();
+     if (xiDeviceEvent->event_type == XCB_INPUT_TOUCH_BEGIN) {
+         QWindowSystemInterface::TouchPoint tp;

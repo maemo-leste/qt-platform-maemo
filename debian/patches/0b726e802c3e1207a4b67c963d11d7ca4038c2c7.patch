@@ -1,0 +1,94 @@
+From 0b726e802c3e1207a4b67c963d11d7ca4038c2c7 Mon Sep 17 00:00:00 2001
+From: Axel Spoerl <axel.spoerl@qt.io>
+Date: Wed, 27 Dec 2023 15:27:41 +0100
+Subject: [PATCH] QXcbWindow::handleLeaveNotifyEvent(): Consume when leaving
+ geometry
+
+QXcbConnection::mousePressWindow() returns the XCB toplevel window,
+which has consumed the window system's last mouse press. When the
+function returns a valid pointer, QXcbWindow::handleLeaveNotifyEvent()
+didn't propagate the leave event to QWSI::handleLeaveEvent(). Instead,
+the leave event was ingored.
+
+That behavior is correct, e.g. when a button on the main window is
+pressed and the mouse hovers away from the button, with the mouse
+button continuously being pressed. It is not correct, if the mouse
+cursor leaves the main window.
+
+=> Ignore the leave event only as long as the mouse cursor remains
+within mousePressWindow()->geometry().
+=> Deliver the leave event, when the mouse cursor leaves the window.
+
+Fixes: QTBUG-119864
+Change-Id: I30a6ebedcd148285b9f17dfd87885ff67726b54c
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+(cherry picked from commit ec24b36d3db82c340d9386951ea48c26f77c2923)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit 39e9b6b24cae07e7d11973ee680f9722ad10cf08)
+(cherry picked from commit 45efad7207ba47319e37be4ca5a61ef57eef7705)
+(cherry picked from commit f34a3e6f975ff7eff02b5af51f24e899ed20bb9e)
+(cherry picked from commit 260d131771a2ffdb6e04d2b16dc76e881cbc9838)
+---
+ src/plugins/platforms/xcb-maemo/qxcbwindow.cpp | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+@@ -2244,10 +2244,15 @@ static inline bool doCheckUnGrabAncestor
+     return true;
+ }
+ 
+-static bool ignoreLeaveEvent(quint8 mode, quint8 detail, QXcbConnection *conn = nullptr)
++static bool windowContainsGlobalPoint(QXcbWindow *window, int x, int y)
++{
++    return window ? window->geometry().contains(window->mapFromGlobal(QPoint(x, y))) : false;
++}
++
++static bool ignoreLeaveEvent(quint8 mode, quint8 detail, QXcbConnection *conn)
+ {
+     return ((doCheckUnGrabAncestor(conn)
+-             && mode == XCB_NOTIFY_MODE_GRAB && detail == XCB_NOTIFY_DETAIL_ANCESTOR)
++            && mode == XCB_NOTIFY_MODE_GRAB && detail == XCB_NOTIFY_DETAIL_ANCESTOR)
+             || (mode == XCB_NOTIFY_MODE_UNGRAB && detail == XCB_NOTIFY_DETAIL_INFERIOR)
+             || detail == XCB_NOTIFY_DETAIL_VIRTUAL
+             || detail == XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL);
+@@ -2267,14 +2272,13 @@ void QXcbWindow::handleEnterNotifyEvent(
+ {
+     connection()->setTime(timestamp);
+ 
+-    const QPoint global = QPoint(root_x, root_y);
+-
+     if (ignoreEnterEvent(mode, detail, connection()) || connection()->mousePressWindow())
+         return;
+ 
+     // Updates scroll valuators, as user might have done some scrolling outside our X client.
+     connection()->xi2UpdateScrollingDevices();
+ 
++    const QPoint global = QPoint(root_x, root_y);
+     const QPoint local(event_x, event_y);
+     QWindowSystemInterface::handleEnterEvent(window(), local, global);
+ }
+@@ -2284,8 +2288,11 @@ void QXcbWindow::handleLeaveNotifyEvent(
+ {
+     connection()->setTime(timestamp);
+ 
+-    if (ignoreLeaveEvent(mode, detail, connection()) || connection()->mousePressWindow())
++    QXcbWindow *mousePressWindow = connection()->mousePressWindow();
++    if (ignoreLeaveEvent(mode, detail, connection())
++        || (mousePressWindow && windowContainsGlobalPoint(mousePressWindow, root_x, root_y))) {
+         return;
++    }
+ 
+     // check if enter event is buffered
+     auto event = connection()->eventQueue()->peek([](xcb_generic_event_t *event, int type) {
+@@ -2303,6 +2310,8 @@ void QXcbWindow::handleLeaveNotifyEvent(
+         QWindowSystemInterface::handleEnterLeaveEvent(enterWindow->window(), window(), local, global);
+     } else {
+         QWindowSystemInterface::handleLeaveEvent(window());
++        if (!windowContainsGlobalPoint(this, root_x, root_y))
++            connection()->setMousePressWindow(nullptr);
+     }
+ 
+     free(enter);

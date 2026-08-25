@@ -1,0 +1,33 @@
+From e416498108d9d9448938d34a6c7f38e70d8de890 Mon Sep 17 00:00:00 2001
+From: Liang Qi <liang.qi@qt.io>
+Date: Mon, 16 Sep 2024 11:14:15 +0200
+Subject: [PATCH] xcb: check validity of RandR output info before using it
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Fixes: QTBUG-128906
+Change-Id: Ibafdf4bb9c449b29437b0520299ab407238e5703
+Reviewed-by: Tor Arne Vestbø <tor.arne.vestbo@qt.io>
+(cherry picked from commit 439e19be17b9169f5786b2593e6d1ac6978bb84b)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit 21098bbb9c61bbc3c5dd441b67043a483e7e8a21)
+(cherry picked from commit dc9995aa1ffa5e5242b93912b2c6f705c7f3e449)
+(cherry picked from commit 8f1f65481121fdbfdf4ec5d84de8ee46850ef46b)
+---
+ src/plugins/platforms/xcb-maemo/qxcbconnection_screens.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbconnection_screens.cpp b/src/plugins/platforms/xcb-maemo/qxcbconnection_screens.cpp
+index 9bb74609f420..24c19eecf8a3 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbconnection_screens.cpp
++++ b/src/plugins/platforms/xcb-maemo/qxcbconnection_screens.cpp
+@@ -165,7 +165,7 @@ void QXcbConnection::updateScreens(const xcb_randr_notify_event_t *event)
+                 // Screen has been disabled
+                 auto outputInfo = Q_XCB_REPLY(xcb_randr_get_output_info, xcb_connection(),
+                                               output.output, output.config_timestamp);
+-                if (outputInfo->crtc == XCB_NONE) {
++                if (!outputInfo || outputInfo->crtc == XCB_NONE) {
+                     qCDebug(lcQpaScreen) << "output" << screen->name() << "has been disabled";
+                     destroyScreen(screen);
+                 } else {

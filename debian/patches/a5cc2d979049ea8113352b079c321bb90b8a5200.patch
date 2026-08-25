@@ -1,0 +1,52 @@
+From a5cc2d979049ea8113352b079c321bb90b8a5200 Mon Sep 17 00:00:00 2001
+From: Liang Qi <liang.qi@qt.io>
+Date: Tue, 19 Mar 2024 12:26:00 +0100
+Subject: [PATCH] xcb: Avoid recreating xcb window in
+ QXcbWindow::requestActivateWindow()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+12203e94f5a34b59b6a7389402c854e823135a35 exposes the issue in xcb
+qpa plugin.
+
+We should not recreate xcb window via the call of focusWindow->winId().
+
+Fixes: QTBUG-123032
+Change-Id: I6da4f3e64a9d7a92a2aab714591986c5d128fbd4
+Reviewed-by: Tor Arne Vestbø <tor.arne.vestbo@qt.io>
+(cherry picked from commit 23a906335e0d8a03388bbd73db43682c724d04a7)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit 167287e11a1b608f298d3aed5c593ac41897d8a9)
+(cherry picked from commit 3999eab0a0e2a350860a6ac4397de9bb24c7846f)
+(cherry picked from commit 72ce299bad2d7a71294160e1766a4620a0e1eb98)
+(cherry picked from commit 643c97c975981f43ed032d9b8b7f90a741a66b5a)
+---
+ src/plugins/platforms/xcb-maemo/qxcbwindow.cpp | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+@@ -1489,6 +1489,11 @@ void QXcbWindow::requestActivateWindow()
+ 
+     updateNetWmUserTime(connection()->time());
+     QWindow *focusWindow = QGuiApplication::focusWindow();
++    xcb_window_t current = XCB_NONE;
++    if (focusWindow) {
++        if (QPlatformWindow *pw = focusWindow->handle())
++            current = pw->winId();
++    }
+ 
+     if (window()->isTopLevel()
+         && !(window()->flags() & Qt::X11BypassWindowManagerHint)
+@@ -1503,7 +1508,7 @@ void QXcbWindow::requestActivateWindow()
+         event.type = atom(QXcbAtom::_NET_ACTIVE_WINDOW);
+         event.data.data32[0] = 1;
+         event.data.data32[1] = connection()->time();
+-        event.data.data32[2] = focusWindow ? focusWindow->winId() : XCB_NONE;
++        event.data.data32[2] = current;
+         event.data.data32[3] = 0;
+         event.data.data32[4] = 0;
+ 

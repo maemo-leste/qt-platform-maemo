@@ -1,0 +1,164 @@
+From 94cf6e79dbbdf1bf6b363622832838a1e0f86d86 Mon Sep 17 00:00:00 2001
+From: Liang Qi <liang.qi@qt.io>
+Date: Wed, 15 Nov 2023 14:43:46 +0100
+Subject: [PATCH] xcb: make QXcbWindow inherit QObject
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Pick-to: 5.15
+Change-Id: I418305f1e66bdf90b8bda724976916e320012961
+Reviewed-by: Tor Arne Vestbø <tor.arne.vestbo@qt.io>
+(cherry picked from commit 5896314ff3e46849b6ff7e1069f2273cc6508cf7)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit 42338ad4b90b9784b774d6c8654d90985a40f7d9)
+(cherry picked from commit 4b60a9bbbe12fe5fdd313d6de1dafac331a9e3d9)
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+(cherry picked from commit f8e589c8d5c10d0734058086a21b0af3bfccddf4)
+---
+ src/plugins/platforms/xcb-maemo/qxcbdrag.cpp   |  2 +-
+ src/plugins/platforms/xcb-maemo/qxcbwindow.cpp | 30 ++++++++++++------------
+ src/plugins/platforms/xcb-maemo/qxcbwindow.h   |  4 +++-
+ 3 files changed, 19 insertions(+), 17 deletions(-)
+
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbdrag.cpp
+@@ -1294,7 +1294,7 @@ void QXcbDrag::handleSelectionRequest(co
+ 
+ bool QXcbDrag::dndEnable(QXcbWindow *w, bool on)
+ {
+-    qCDebug(lcQpaXDnd) << "dndEnable" << w << on;
++    qCDebug(lcQpaXDnd) << "dndEnable" << static_cast<QPlatformWindow *>(w) << on;
+     // Windows announce that they support the XDND protocol by creating a window property XdndAware.
+     if (on) {
+         QXcbWindow *window = nullptr;
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+@@ -135,7 +135,7 @@ const quint32 XEMBED_VERSION = 0;
+ 
+ QXcbScreen *QXcbWindow::parentScreen()
+ {
+-    return parent() ? static_cast<QXcbWindow*>(parent())->parentScreen() : xcbScreen();
++    return QPlatformWindow::parent() ? static_cast<QXcbWindow*>(QPlatformWindow::parent())->parentScreen() : xcbScreen();
+ }
+ 
+ //QPlatformWindow::screenForGeometry version that uses deviceIndependentGeometry
+@@ -287,8 +287,8 @@ void QXcbWindow::create()
+     Qt::WindowType type = window()->type();
+ 
+     QXcbScreen *currentScreen = xcbScreen();
+-    QXcbScreen *platformScreen = parent() ? parentScreen() : initialScreen();
+-    QRect rect = parent()
++    QXcbScreen *platformScreen = QPlatformWindow::parent() ? parentScreen() : initialScreen();
++    QRect rect = QPlatformWindow::parent()
+         ? QHighDpi::toNativeLocalPosition(window()->geometry(), platformScreen)
+         : QHighDpi::toNativePixels(window()->geometry(), platformScreen);
+ 
+@@ -328,11 +328,11 @@ void QXcbWindow::create()
+         QWindowSystemInterface::handleWindowScreenChanged(window(), platformScreen->QPlatformScreen::screen());
+ 
+     xcb_window_t xcb_parent_id = platformScreen->root();
+-    if (parent()) {
+-        xcb_parent_id = static_cast<QXcbWindow *>(parent())->xcb_window();
+-        m_embedded = parent()->isForeignWindow();
++    if (QPlatformWindow::parent()) {
++        xcb_parent_id = static_cast<QXcbWindow *>(QPlatformWindow::parent())->xcb_window();
++        m_embedded = QPlatformWindow::parent()->isForeignWindow();
+ 
+-        QSurfaceFormat parentFormat = parent()->window()->requestedFormat();
++        QSurfaceFormat parentFormat = QPlatformWindow::parent()->window()->requestedFormat();
+         if (window()->surfaceType() != QSurface::OpenGLSurface && parentFormat.hasAlpha()) {
+             window()->setFormat(parentFormat);
+         }
+@@ -350,16 +350,16 @@ void QXcbWindow::create()
+             qWarning() << "Failed to use requested visual id.";
+     }
+ 
+-    if (parent()) {
++    if (QPlatformWindow::parent()) {
+         // When using a Vulkan QWindow via QWidget::createWindowContainer() we
+         // must make sure the visuals are compatible. Now, the parent will be
+         // of RasterGLSurface which typically chooses a GLX/EGL compatible
+         // visual which may not be what the Vulkan window would choose.
+         // Therefore, take the parent's visual.
+         if (window()->surfaceType() == QSurface::VulkanSurface
+-                && parent()->window()->surfaceType() != QSurface::VulkanSurface)
++                && QPlatformWindow::parent()->window()->surfaceType() != QSurface::VulkanSurface)
+         {
+-            visual = platformScreen->visualForId(static_cast<QXcbWindow *>(parent())->visualId());
++            visual = platformScreen->visualForId(static_cast<QXcbWindow *>(QPlatformWindow::parent())->visualId());
+         }
+     }
+ 
+@@ -587,7 +587,7 @@ void QXcbWindow::setGeometry(const QRect
+     propagateSizeHints();
+ 
+     QXcbScreen *currentScreen = xcbScreen();
+-    QXcbScreen *newScreen = parent() ? parentScreen() : static_cast<QXcbScreen*>(screenForGeometry(rect));
++    QXcbScreen *newScreen = QPlatformWindow::parent() ? parentScreen() : static_cast<QXcbScreen*>(screenForGeometry(rect));
+ 
+     if (!newScreen)
+         newScreen = xcbScreen();
+@@ -2058,7 +2058,7 @@ void QXcbWindow::handleConfigureNotifyEv
+ {
+     bool fromSendEvent = (event->response_type & 0x80);
+     QPoint pos(event->x, event->y);
+-    if (!parent() && !fromSendEvent) {
++    if (!QPlatformWindow::parent() && !fromSendEvent) {
+         // Do not trust the position, query it instead.
+         auto reply = Q_XCB_REPLY(xcb_translate_coordinates, xcb_connection(),
+                                  xcb_window(), xcbScreen()->root(), 0, 0);
+@@ -2069,7 +2069,7 @@ void QXcbWindow::handleConfigureNotifyEv
+     }
+ 
+     const QRect actualGeometry = QRect(pos, QSize(event->width, event->height));
+-    QPlatformScreen *newScreen = parent() ? parent()->screen() : screenForGeometry(actualGeometry);
++    QPlatformScreen *newScreen = QPlatformWindow::parent() ? QPlatformWindow::parent()->screen() : screenForGeometry(actualGeometry);
+     if (!newScreen)
+         return;
+ 
+@@ -2179,7 +2179,7 @@ void QXcbWindow::handleButtonPressEvent(
+ 
+     if (m_embedded && !m_trayIconWindow) {
+         if (window() != QGuiApplication::focusWindow()) {
+-            const QXcbWindow *container = static_cast<const QXcbWindow *>(parent());
++            const QXcbWindow *container = static_cast<const QXcbWindow *>(QPlatformWindow::parent());
+             Q_ASSERT(container != nullptr);
+ 
+             sendXEmbedMessage(container->xcb_window(), XEMBED_REQUEST_FOCUS);
+@@ -2636,7 +2636,7 @@ bool QXcbWindow::windowEvent(QEvent *eve
+             case Qt::BacktabFocusReason:
+                 {
+                 const QXcbWindow *container =
+-                    static_cast<const QXcbWindow *>(parent());
++                    static_cast<const QXcbWindow *>(QPlatformWindow::parent());
+                 sendXEmbedMessage(container->xcb_window(),
+                                   focusEvent->reason() == Qt::TabFocusReason ?
+                                   XEMBED_FOCUS_NEXT : XEMBED_FOCUS_PREV);
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.h
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbwindow.h
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.h
+@@ -41,6 +41,7 @@
+ #define QXCBWINDOW_H
+ 
+ #include <qpa/qplatformwindow.h>
++#include <QtCore/QObject>
+ #include <QtGui/QSurfaceFormat>
+ #include <QtGui/QImage>
+ 
+@@ -58,8 +59,9 @@ class QXcbScreen;
+ class QXcbSyncWindowRequest;
+ class QIcon;
+ 
+-class Q_XCB_EXPORT QXcbWindow : public QXcbObject, public QXcbWindowEventListener, public QPlatformWindow
++class Q_XCB_EXPORT QXcbWindow : public QObject, public QXcbObject, public QXcbWindowEventListener, public QPlatformWindow
+ {
++    Q_OBJECT
+ public:
+     enum NetWmState {
+         NetWmStateAbove = 0x1,

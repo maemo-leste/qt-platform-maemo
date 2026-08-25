@@ -1,0 +1,30 @@
+From 5fe9f2df6e38ab9f9aeeb5ac1623b804fbf0b2a6 Mon Sep 17 00:00:00 2001
+From: Liang Qi <liang.qi@qt.io>
+Date: Mon, 25 Sep 2023 15:39:47 +0200
+Subject: [PATCH] xcb: replace a warning with debug info
+
+Change-Id: I850297ad34edaf5dd66f56f549325745f2f5a07f
+Reviewed-by: Keith Kyzivat <keith.kyzivat@qt.io>
+Reviewed-by: Volker Hilsheimer <volker.hilsheimer@qt.io>
+(cherry picked from commit 58215288f40f08aa49cf9c157588498a39b5afdb)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit 42b199f122cf394e6ee489fd014e3e9d9a1adcb5)
+(cherry picked from commit b426cdc1f645ddb3514f97467986b860dfcd1f54)
+(cherry picked from commit 92eb6e564909c66d4b3575162a2b72a3dfe622c8)
+---
+ src/plugins/platforms/xcb-maemo/qxcbwindow.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+@@ -1105,7 +1105,7 @@ void QXcbWindow::setNetWmState(Qt::Windo
+ void QXcbWindow::setNetWmStateOnUnmappedWindow()
+ {
+     if (Q_UNLIKELY(m_mapped))
+-        qCWarning(lcQpaXcb()) << "internal error: " << Q_FUNC_INFO << "called on mapped window";
++        qCDebug(lcQpaXcb()) << "internal info: " << Q_FUNC_INFO << "called on mapped window";
+ 
+     NetWmStates states;
+     const Qt::WindowFlags flags = window()->flags();

@@ -1,0 +1,33 @@
+From 5a7ff7a8c1e2018cff88e62d881bb4ab69b4ab8c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tor=20Arne=20Vestb=C3=B8?= <tor.arne.vestbo@qt.io>
+Date: Wed, 28 Aug 2024 13:31:13 +0200
+Subject: [PATCH] xcb: Sync XCB connection after reparenting window
+
+This is important for the reparenting to take effect even if there
+are no other state changes to the window, such as changing its
+geometry.
+
+Change-Id: I9b39b56d163faf7a9b472cefbb19efdb944cb304
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+(cherry picked from commit 92619ce2ec8381aa01647337665e626b84063f59)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+(cherry picked from commit b86a0cb720b0ff6b40148d0ca07e80783b9a78d9)
+(cherry picked from commit 080bcdd9da9a4847386abc4bd6430611f9a8ae8d)
+(cherry picked from commit d067d1f44fb1f6f4211afa7da5cbe38039f35c5b)
+(cherry picked from commit fdf7a598594dea352b5ac2a6a4cde455c67bab5c)
+---
+ src/plugins/platforms/xcb-maemo/qxcbwindow.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+Index: qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+===================================================================
+--- qt-platform-maemo.orig/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
++++ qt-platform-maemo/src/plugins/platforms/xcb-maemo/qxcbwindow.cpp
+@@ -1342,6 +1342,7 @@ void QXcbWindow::setParent(const QPlatfo
+         m_embedded = false;
+     }
+     xcb_reparent_window(xcb_connection(), xcb_window(), xcb_parent_id, topLeft.x(), topLeft.y());
++    connection()->sync();
+ }
+ 
+ void QXcbWindow::setWindowTitle(const QString &title)
