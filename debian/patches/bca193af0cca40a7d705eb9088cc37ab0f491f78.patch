@@ -1,0 +1,127 @@
+From bca193af0cca40a7d705eb9088cc37ab0f491f78 Mon Sep 17 00:00:00 2001
+From: Ilya Fedin <fedin-ilja2010@ya.ru>
+Date: Thu, 21 Apr 2022 14:07:19 +0400
+Subject: [PATCH] xcb: set _NET_STARTUP_ID at client leader window
+
+This should help to overcome WM's focus prevention mechanism
+
+Fixes: QTBUG-96276
+Change-Id: Ic5fb46f7ce54f0df29850725bafa364b74e30d25
+Reviewed-by: Qt CI Bot <qt_ci_bot@qt-project.org>
+Reviewed-by: Liang Qi <liang.qi@qt.io>
+(cherry picked from commit ba8c4b4ac6df8c4318e3dd8c886aa0135628d33c)
+Reviewed-by: Qt Cherry-pick Bot <cherrypick_bot@qt-project.org>
+---
+ src/plugins/platforms/xcb-maemo/qxcbatom.cpp       |  1 +
+ src/plugins/platforms/xcb-maemo/qxcbatom.h         |  1 +
+ src/plugins/platforms/xcb-maemo/qxcbconnection.cpp | 28 ++++++++++++++++++--
+ src/plugins/platforms/xcb-maemo/qxcbconnection.h   |  5 ++--
+ src/plugins/platforms/xcb-maemo/qxcbscreen.cpp     |  2 +-
+ 5 files changed, 31 insertions(+), 6 deletions(-)
+
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbatom.cpp b/src/plugins/platforms/xcb-maemo/qxcbatom.cpp
+index 7e05a9f010ff..b5a3044f320d 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbatom.cpp
++++ b/src/plugins/platforms/xcb-maemo/qxcbatom.cpp
+@@ -152,6 +152,7 @@ static const char *xcb_atomnames = {
+ 
+     "_NET_STARTUP_INFO\0"
+     "_NET_STARTUP_INFO_BEGIN\0"
++    "_NET_STARTUP_ID\0"
+ 
+     "_NET_SUPPORTING_WM_CHECK\0"
+ 
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbatom.h b/src/plugins/platforms/xcb-maemo/qxcbatom.h
+index 6c2a2367e222..9acb13e07f66 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbatom.h
++++ b/src/plugins/platforms/xcb-maemo/qxcbatom.h
+@@ -153,6 +153,7 @@ class QXcbAtom
+ 
+         _NET_STARTUP_INFO,
+         _NET_STARTUP_INFO_BEGIN,
++        _NET_STARTUP_ID,
+ 
+         _NET_SUPPORTING_WM_CHECK,
+ 
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbconnection.cpp b/src/plugins/platforms/xcb-maemo/qxcbconnection.cpp
+index 0c2409260e77..16027b82a79d 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbconnection.cpp
++++ b/src/plugins/platforms/xcb-maemo/qxcbconnection.cpp
+@@ -119,8 +119,8 @@ QXcbConnection::QXcbConnection(QXcbNativeInterface *nativeInterface, bool canGra
+     m_drag = new QXcbDrag(this);
+ #endif
+ 
+-    m_startupId = qgetenv("DESKTOP_STARTUP_ID");
+-    if (!m_startupId.isNull())
++    setStartupId(qgetenv("DESKTOP_STARTUP_ID"));
++    if (!startupId().isNull())
+         qunsetenv("DESKTOP_STARTUP_ID");
+ 
+     const int focusInDelay = 100;
+@@ -787,6 +787,28 @@ void QXcbConnection::setMousePressWindow(QXcbWindow *w)
+     m_mousePressWindow = w;
+ }
+ 
++QByteArray QXcbConnection::startupId() const
++{
++    return m_startupId;
++}
++void QXcbConnection::setStartupId(const QByteArray &nextId)
++{
++    m_startupId = nextId;
++    if (m_clientLeader) {
++        if (!nextId.isEmpty())
++            xcb_change_property(xcb_connection(),
++                                XCB_PROP_MODE_REPLACE,
++                                clientLeader(),
++                                atom(QXcbAtom::_NET_STARTUP_ID),
++                                atom(QXcbAtom::UTF8_STRING),
++                                8,
++                                nextId.length(),
++                                nextId.constData());
++        else
++            xcb_delete_property(xcb_connection(), clientLeader(), atom(QXcbAtom::_NET_STARTUP_ID));
++    }
++}
++
+ void QXcbConnection::grabServer()
+ {
+     if (m_canGrabServer)
+@@ -931,6 +953,8 @@ xcb_window_t QXcbConnection::clientLeader()
+                                 session.constData());
+         }
+ #endif
++
++        setStartupId(startupId());
+     }
+     return m_clientLeader;
+ }
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbconnection.h b/src/plugins/platforms/xcb-maemo/qxcbconnection.h
+index 778ef227c225..45f7260a8f19 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbconnection.h
++++ b/src/plugins/platforms/xcb-maemo/qxcbconnection.h
+@@ -204,9 +204,8 @@ class Q_XCB_EXPORT QXcbConnection : public QXcbBasicConnection
+     QXcbWindow *mousePressWindow() const { return m_mousePressWindow; }
+     void setMousePressWindow(QXcbWindow *);
+ 
+-    QByteArray startupId() const { return m_startupId; }
+-    void setStartupId(const QByteArray &nextId) { m_startupId = nextId; }
+-    void clearStartupId() { m_startupId.clear(); }
++    QByteArray startupId() const;
++    void setStartupId(const QByteArray &nextId);
+ 
+     void grabServer();
+     void ungrabServer();
+diff --git a/src/plugins/platforms/xcb-maemo/qxcbscreen.cpp b/src/plugins/platforms/xcb-maemo/qxcbscreen.cpp
+index 089f2ccf233d..709bdb2327ec 100644
+--- a/src/plugins/platforms/xcb-maemo/qxcbscreen.cpp
++++ b/src/plugins/platforms/xcb-maemo/qxcbscreen.cpp
+@@ -658,7 +658,7 @@ void QXcbScreen::windowShown(QXcbWindow *window)
+     // Freedesktop.org Startup Notification
+     if (!connection()->startupId().isEmpty() && window->window()->isTopLevel()) {
+         sendStartupMessage(QByteArrayLiteral("remove: ID=") + connection()->startupId());
+-        connection()->clearStartupId();
++        connection()->setStartupId({});
+     }
+ }
+ 
